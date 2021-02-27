@@ -103,6 +103,7 @@ func TestIpValidation(t *testing.T) {
 		{"192.168.0.191", false},
 		{"192.168.0.251", false},
 		{"192.168.0.196", false},
+		{"185.107.12.169", false},
 	}
 
 	for _, test := range tests {

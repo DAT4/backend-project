@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
 	"io"
@@ -15,8 +14,13 @@ const AppKey = "golangcode.com"
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	var user User
-	_ = json.NewDecoder(r.Body).Decode(&user)
-	err := user.authenticate()
+	err := user.fromJson(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, err.Error())
+		return
+	}
+	err = user.authenticate()
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		io.WriteString(w, `{"error":"error"}`)

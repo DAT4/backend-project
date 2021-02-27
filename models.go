@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -25,7 +27,6 @@ type FindOneQuery struct {
 }
 
 type AddOneQuery struct {
-	Validation func() bool
 	Model      interface{}
 	Filter     bson.M
 	Collection string
@@ -53,24 +54,33 @@ func (user *User) validate() error {
 	if err != nil {
 		return err
 	}
-	for _,ip := range user.Ips{
+	if len(user.Ips) == 0 {
+		return errors.New("ip is missing")
+	}
+	for _, ip := range user.Ips {
+		fmt.Println(ip)
 		err = ip.validate()
 		if err != nil {
 			return err
 		}
 	}
-	for _,mac:= range user.Macs{
+	if len(user.Macs) == 0 {
+		return errors.New("mac address is missing")
+	}
+	for _, mac := range user.Macs {
 		err = mac.validate()
 		if err != nil {
 			return err
 		}
 	}
+	fmt.Println("Dont checking")
 	return nil
 }
 
 func (user *User) authenticate() error {
+	var tmpUser User
 	q := FindOneQuery{
-		Model: user,
+		Model: &tmpUser,
 		Filter: bson.M{
 			"username": user.Username,
 			"password": user.Password,
@@ -81,6 +91,11 @@ func (user *User) authenticate() error {
 	err := q.find()
 	if err != nil {
 		return err
+	}
+
+	ok := user.check(tmpUser.Password)
+	if !ok {
+		return errors.New("password incorrect")
 	}
 	return nil
 }

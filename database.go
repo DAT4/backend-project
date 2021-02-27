@@ -42,15 +42,15 @@ func (query *FindOneQuery) find() error {
 	return nil
 }
 
-func add(model interface{}, collection string) error{
+func (query *AddOneQuery) add() error {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	col, cli, err := connect(collection)
+	col, cli, err := connect(query.Collection)
 	defer cli.Disconnect(ctx)
 	if err != nil {
 		return err
 	}
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	_, err = col.InsertOne(ctx, model)
+	_, err = col.InsertOne(ctx, query.Model)
 	if err != nil {
 		return err
 	}
