@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
 	"io"
@@ -20,10 +21,12 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
+	fmt.Println(user)
 	err = user.authenticate()
 	if err != nil {
+		fmt.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{"error":"error"}`)
+		io.WriteString(w, err.Error())
 		return
 	}
 

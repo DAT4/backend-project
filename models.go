@@ -83,7 +83,6 @@ func (user *User) authenticate() error {
 		Model: &tmpUser,
 		Filter: bson.M{
 			"username": user.Username,
-			"password": user.Password,
 		},
 		Collection: "users",
 	}
