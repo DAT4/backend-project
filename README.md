@@ -1,10 +1,14 @@
 # Backend game
 
+
 ## Websocket
 
 The websocket is used for live streaming the data of the game between the clients.
 
 Websocket is nice because it allows the server to make callbacks. And provides a much more reactive program.
+
+The websocket consists of a hub which has a number of clients who can register and unregister. When a client sends his coordinates to the server then the hub will register that a client has sent a message and therefore notify/broadcast all the other clients about the new coordinates of the player.
+
 
 ### Websocket over ssl
 
@@ -26,4 +30,13 @@ _TODO: find what this upgrade thing is all about_
 
 Luckily for us the websocket can easily be wrapped with a jwt authentication function in go. Because the websocket request is for Go actually just understood a normal HTTP GET request, then we can add the header with the token that we got from an earlier request.
 
+```go
+r.Handle("/game", AuthMiddleware(http.HandlerFunc(Game))).Methods("GET")
+```
+
 _Note: it is important that the request is marked as a GET request in the gorilla router, else it will make an error._
+
+### **(TODO)** Setting up a new hub for each game. 
+Right now only one hub exists for the whole application. This is not how it should be in the future.
+
+The plan is to create hubs dynamically for each 4 players who connect to a game.
