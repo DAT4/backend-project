@@ -10,18 +10,26 @@ import (
 	"net/http"
 )
 
+var hub = newHub()
+
 func main() {
+	go hub.run()
 	r := mux.NewRouter()
 	r.HandleFunc("/login", TokenHandler).Methods("POST")
 	r.HandleFunc("/register", createUser).Methods("POST")
-	r.Handle("/game", AuthMiddleware(http.HandlerFunc(Game))).Methods("POST")
+	r.Handle("/game", AuthMiddleware(http.HandlerFunc(Game))).Methods("GET")
 	handler := cors.Default().Handler(r)
-	log.Fatal(http.ListenAndServe(":8055", handler))
+	log.Fatal(http.ListenAndServe(":8056", handler))
 }
 
 func Game(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte("Hope you like tea"))
+	for name, values := range r.Header {
+		// Loop over all values for the name.
+		for _, value := range values {
+			fmt.Println(name, value)
+		}
+	}
+	serveWs(hub, w, r)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
