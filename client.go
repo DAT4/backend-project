@@ -6,8 +6,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -40,6 +43,13 @@ func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
+		c.hub.spaces <- true
+		for i := range c.hub.roles{
+			if c.hub.roles[i] == c{
+				fmt.Println("Found the synner!")
+				c.hub.roles[i] = nil
+			}
+		}
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -53,6 +63,33 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		if message[0] == '#' {
+			str := strings.Split(string(message), ":")
+			fmt.Println(str)
+			if str[0] == "#choice" {
+				choice, err := strconv.Atoi(str[1])
+				if err != nil {
+					log.Fatal(err)
+				}
+				choice = choice - 1
+				if c.hub.roles[choice] == nil {
+					c.conn.WriteMessage(websocket.TextMessage, []byte("ok"))
+					c.hub.roles[choice] = c
+					var ready bool = true
+					for _, e := range c.hub.roles {
+						if e == nil {
+							ready = false
+						}
+					}
+					if ready {
+						fmt.Println("REEADDDYY")
+						c.hub.broadcast <- []byte("ready")
+					}
+				} else {
+					c.conn.WriteMessage(websocket.TextMessage, []byte("taken"))
+				}
+			}
+		}
 		c.hub.broadcast <- message
 	}
 }
@@ -71,19 +108,7 @@ func (c *Client) writePump() {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
-			if err := w.Close(); err != nil {
-				return
-			}
+			c.conn.WriteMessage(websocket.TextMessage, message)
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {

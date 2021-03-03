@@ -17,19 +17,19 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/login", TokenHandler).Methods("POST")
 	r.HandleFunc("/register", createUser).Methods("POST")
-	r.Handle("/game", AuthMiddleware(http.HandlerFunc(Game))).Methods("GET")
+	r.Handle("/game", AuthMiddleware(http.HandlerFunc(StartGame))).Methods("GET")
 	handler := cors.Default().Handler(r)
 	log.Fatal(http.ListenAndServe(":8056", handler))
 }
 
-func Game(w http.ResponseWriter, r *http.Request) {
-	for name, values := range r.Header {
-		// Loop over all values for the name.
-		for _, value := range values {
-			fmt.Println(name, value)
-		}
+func StartGame(w http.ResponseWriter, r *http.Request) {
+	select {
+	case <-hub.spaces:
+		serveWs(hub, w, r)
+	default:
+		fmt.Println("No space for player")
+		w.WriteHeader(http.StatusTeapot)
 	}
-	serveWs(hub, w, r)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 	err = q1.find()
 	if err == nil {
-		fmt.Println("Finding: ",err)
+		fmt.Println("Finding: ", err)
 		fmt.Println(tmpUser)
 		w.WriteHeader(http.StatusNotAcceptable)
 		w.Write([]byte("A user already exists with this name"))
@@ -80,7 +80,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	err = q2.add()
 	if err != nil {
-		fmt.Println("Adding: ",err)
+		fmt.Println("Adding: ", err)
 		w.WriteHeader(http.StatusNotAcceptable)
 		w.Write([]byte(err.Error()))
 		return
