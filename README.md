@@ -1,5 +1,12 @@
 # Backend game
 
+## Go routines
+
+Go routines or coroutines are used for parallel programming and is used a lot in the application
+
+* Each client will have his own
+* The hub will have one
+
 
 ## Websocket
 
