@@ -24,6 +24,7 @@ type Game struct {
 func NewGame(name Username) *Game {
 	return &Game{
 		Name:       name,
+		clients:    make(map[*Client]bool),
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
