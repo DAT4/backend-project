@@ -1,31 +1,27 @@
 package main
 
 import (
-	"backend-projekt/database"
 	"backend-projekt/models"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 )
 
-var games = make(map[models.Username]*models.Game)
+var games = make(map[models.Username]*models.Game) //DATA RACE DETECTED
 var gamesChannel = make(chan *models.Game)
 
-func runHub(){
+func runHub() {
 	for {
 		select {
-		case newGame := <- gamesChannel:
-			games[newGame.Name] = newGame
+		case newGame := <-gamesChannel:
+			games[newGame.Name] = newGame //DATA RACE DETECTED
 			go newGame.Run()
 		}
 	}
 }
-
 
 func main() {
 	go runHub()
@@ -42,7 +38,7 @@ func main() {
 func CreateWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	user, err := models.UserFromToken(r)
 	if err != nil {
-		handleHttpError(w,err,http.StatusNotAcceptable)
+		handleHttpError(w, err, http.StatusNotAcceptable)
 	}
 	game := models.NewGame(user.Username)
 	gamesChannel <- game
@@ -52,17 +48,24 @@ func CreateWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 func JoinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	user, err := models.UserFromToken(r)
 	if err != nil {
-		handleHttpError(w,err,http.StatusNotAcceptable)
+		handleHttpError(w, err, http.StatusNotAcceptable)
 	}
 	peer := r.URL.Query().Get("peer")
 	if len(peer) > 0 {
-		user.ServeWs(games[models.Username(peer)], w, r)
+		game, ok := games[models.Username(peer)]
+		if !ok {
+			err = errors.New("peer available but no Game is found")
+			handleHttpError(w, err, http.StatusInternalServerError)
+			return
+		}
+		user.ServeWs(game, w, r) //DATA RACE DETECTED
 	} else {
-		handleHttpError(w,errors.New("peer not avalible"),http.StatusUnavailableForLegalReasons)
+		err = errors.New("peer not available")
+		handleHttpError(w, err, http.StatusUnavailableForLegalReasons)
 	}
 }
 
-func handleHttpError(w http.ResponseWriter, err error, status int){
+func handleHttpError(w http.ResponseWriter, err error, status int) {
 	fmt.Println(err)
 	w.WriteHeader(status)
 	w.Write([]byte(err.Error()))
@@ -72,11 +75,12 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	user, err := models.UserFromJson(r.Body)
 	if err != nil {
+		handleHttpError(w, err, http.StatusNotAcceptable)
 		return
 	}
 	err = user.Validate()
 	if err != nil {
-		handleHttpError(w,err,http.StatusNotAcceptable)
+		handleHttpError(w, err, http.StatusNotAcceptable)
 		return
 	}
 	err = user.HashAndSalt()
@@ -84,28 +88,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		handleHttpError(w, err, http.StatusTeapot)
 		return
 	}
-	var tmpUser models.User
-	q1 := database.FindOneQuery{
-		Model:      &tmpUser,
-		Filter:     bson.M{"username": user.Username},
-		Options:    options.FindOne(),
-		Collection: "users",
-	}
-	err = q1.Find()
-	if err == nil {
-		e := errors.New("A user already exists with this name")
-		handleHttpError(w,e,http.StatusNotAcceptable)
-		return
-	}
-	q2 := database.AddOneQuery{
-		Model:      &user,
-		Filter:     nil,
-		Collection: "users",
-	}
-
-	err = q2.Add()
+	err = user.Create()
 	if err != nil {
-		handleHttpError(w,err,http.StatusNotAcceptable)
+		handleHttpError(w, err, http.StatusTeapot)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)

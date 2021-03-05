@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"io"
 	"net/http"
@@ -19,6 +20,21 @@ type User struct {
 	Email    Email
 	Macs     []Mac
 	Ips      []Ip
+}
+
+func (user *User) UsernameTaken() (err error) {
+	var tmpUser User
+	q1 := database.FindOneQuery{
+		Model:      &tmpUser,
+		Filter:     bson.M{"username": user.Username},
+		Options:    options.FindOne(),
+		Collection: "users",
+	}
+	err = q1.Find()
+	if err == nil {
+		return errors.New("A user already exists with this name")
+	}
+	return nil
 }
 
 func UserFromJson(data io.ReadCloser) (user User, err error) {
@@ -54,8 +70,25 @@ func userFromId(id string) (user User, err error) {
 	return
 }
 
+func (user *User) Create() (err error) {
+	q2 := database.AddOneQuery{
+		Model:      &user,
+		Filter:     nil,
+		Collection: "users",
+	}
+	err = q2.Add()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (user *User) Validate() error {
 	var err error
+	err = user.UsernameTaken()
+	if err != nil {
+		return err
+	}
 	err = user.Password.validate()
 	if err != nil {
 		return err
