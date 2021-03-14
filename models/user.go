@@ -22,21 +22,6 @@ type User struct {
 	Ips      []Ip
 }
 
-func (user *User) UsernameTaken() (err error) {
-	var tmpUser User
-	q1 := database.FindOneQuery{
-		Model:      &tmpUser,
-		Filter:     bson.M{"username": user.Username},
-		Options:    options.FindOne(),
-		Collection: "users",
-	}
-	err = q1.Find()
-	if err == nil {
-		return errors.New("A user already exists with this name")
-	}
-	return nil
-}
-
 func UserFromJson(data io.ReadCloser) (user User, err error) {
 	err = json.NewDecoder(data).Decode(&user)
 	return
@@ -145,6 +130,7 @@ func (user *User) Authenticate() (User, error) {
 	}
 	return tmpUser, nil
 }
+
 func (user *User) HashAndSalt() error {
 	bytePwd := []byte(user.Password)
 	hash, err := bcrypt.GenerateFromPassword(bytePwd, bcrypt.MinCost)
@@ -165,3 +151,19 @@ func (user *User) check(hashedPassword Password) bool {
 	}
 	return true
 }
+
+func (user *User) UsernameTaken() (err error) {
+	var tmpUser User
+	q1 := database.FindOneQuery{
+		Model:      &tmpUser,
+		Filter:     bson.M{"username": user.Username},
+		Options:    options.FindOne(),
+		Collection: "users",
+	}
+	err = q1.Find()
+	if err == nil {
+		return errors.New("A user already exists with this name")
+	}
+	return nil
+}
+

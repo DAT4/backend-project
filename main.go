@@ -17,6 +17,7 @@ func runHub() {
 	for {
 		select {
 		case newGame := <-gamesChannel:
+			fmt.Println("Game started by", newGame.Name)
 			games[newGame.Name] = newGame //DATA RACE DETECTED
 			go newGame.Run()
 		}
@@ -46,6 +47,7 @@ func CreateWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 func JoinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hello Peer")
 	user, err := models.UserFromToken(r)
 	if err != nil {
 		handleHttpError(w, err, http.StatusNotAcceptable)

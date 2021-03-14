@@ -85,6 +85,14 @@ func (c *Client) writePump() {
 
 }
 
+func (c *Client) SendStartCommand(msg message) error {
+	err := c.conn.WriteJSON(&msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (user *User) ServeWs(game *Game, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

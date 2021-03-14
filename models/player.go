@@ -2,6 +2,11 @@ package models
 
 type Player struct {
 	*User
-	x int
-	y int
+	Position
 }
+
+type Position struct {
+	x float64
+	y float64
+}
+
