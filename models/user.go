@@ -1,10 +1,10 @@
 package models
 
 import (
-	"backend-projekt/database"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/DAT4/backend-project/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"

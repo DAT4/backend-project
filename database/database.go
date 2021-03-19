@@ -5,7 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
 	"time"
 )
 
@@ -23,8 +22,7 @@ type AddOneQuery struct {
 }
 
 func connect(col string) (*mongo.Collection, *mongo.Client, error) {
-	uri := os.Getenv("MONGO_URI")
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	client, err := mongo.NewClient()
 	if err != nil {
 		return nil, nil, err
 	}

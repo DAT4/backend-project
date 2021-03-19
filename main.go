@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend-projekt/models"
 	"errors"
 	"fmt"
+	"github.com/DAT4/backend-project/models"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"log"
