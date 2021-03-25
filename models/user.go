@@ -86,26 +86,6 @@ func (user *User) Validate() error {
 	if err != nil {
 		return err
 	}
-	if len(user.Ips) == 0 {
-		return errors.New("ip is missing")
-	}
-	for _, ip := range user.Ips {
-		fmt.Println(ip)
-		err = ip.validate()
-		if err != nil {
-			return err
-		}
-	}
-	if len(user.Macs) == 0 {
-		return errors.New("mac address is missing")
-	}
-	for _, mac := range user.Macs {
-		err = mac.validate()
-		if err != nil {
-			return err
-		}
-	}
-	fmt.Println("Dont checking")
 	return nil
 }
 

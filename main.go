@@ -24,13 +24,32 @@ func runHub() {
 	}
 }
 
+type endpoint struct {
+	path string
+	handler func(w http.ResponseWriter, r *http.Request)
+	secure bool
+	method string
+}
+
 func main() {
 	go runHub()
 	r := mux.NewRouter()
-	r.HandleFunc("/login", models.TokenHandler).Methods("POST")
-	r.HandleFunc("/register", createUser).Methods("POST")
-	r.Handle("/create", models.AuthMiddleware(http.HandlerFunc(CreateWebsocketConnection))).Methods("GET")
-	r.Handle("/join", models.AuthMiddleware(http.HandlerFunc(JoinWebsocketConnection))).Methods("GET")
+	endpoints := []endpoint{
+		{"/login",models.TokenHandler, false,"POST" },
+		{"/register",createUser, false,"POST" },
+		{"/create",CreateWebsocketConnection, true,"GET" },
+		{"/join",JoinWebsocketConnection, true,"GET" },
+	}
+
+	for _, e := range endpoints{
+		if e.secure {
+			r.Handle(e.path, models.AuthMiddleware(http.HandlerFunc(e.handler))).Methods(e.method)
+		} else {
+			r.HandleFunc(e.path, e.handler).Methods(e.method)
+		}
+
+	}
+
 	handler := cors.Default().Handler(r)
 	fmt.Println("Running on port 8056")
 	log.Fatal(http.ListenAndServe(":8056", handler))

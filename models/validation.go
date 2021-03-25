@@ -51,7 +51,7 @@ func (username Username) validate() error {
 }
 
 func (email Email) validate() error {
-	re, _ := regexp.Compile(`^s\d{6}@student\.dtu\.dk$`)
+	re, _ := regexp.Compile(`^\w+@\w+\.\w+$`)
 	ok := re.MatchString(string(email))
 	if !ok {
 		return errors.New("username is invalid")
