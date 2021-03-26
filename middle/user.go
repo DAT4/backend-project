@@ -3,22 +3,22 @@ package middle
 import (
 	"encoding/json"
 	"github.com/DAT4/backend-project/dao"
-	"github.com/DAT4/backend-project/models/user"
+	"github.com/DAT4/backend-project/models"
 	"io"
 	"net/http"
 )
 
-func UserFromJson(data io.ReadCloser) (user user.User, err error) {
+func UserFromJson(data io.ReadCloser) (user models.User, err error) {
 	err = json.NewDecoder(data).Decode(&user)
 	return
 }
 
-func UserFromToken(r *http.Request) (user user.User, err error) {
-	token, err := ExtractJWTToken(r)
+func UserFromToken(r *http.Request) (user models.User, err error) {
+	token, err := extractJWTToken(r)
 	if err != nil {
 		return
 	}
-	id, err := ExtractClaims(token)
+	id, err := extractClaims(token)
 	if err != nil {
 		return
 	}

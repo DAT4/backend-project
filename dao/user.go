@@ -3,44 +3,44 @@ package dao
 import (
 	"errors"
 	"fmt"
-	"github.com/DAT4/backend-project/models/user"
+	"github.com/DAT4/backend-project/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Create(user *user.User) (err error) {
+func Create(user *models.User) (err error) {
 	q2 := addOneQuery{
-		Model:      &user,
-		Filter:     nil,
-		Collection: "users",
+		model:      &user,
+		filter:     nil,
+		collection: "users",
 	}
 	return q2.add()
 }
 
-func UserFromId(id string) (user user.User, err error) {
+func UserFromId(id string) (user models.User, err error) {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
 	}
 	q := findOneQuery{
-		Model:      &user,
-		Filter:     bson.M{"_id": _id},
-		Collection: "users",
+		model:      &user,
+		filter:     bson.M{"_id": _id},
+		collection: "users",
 	}
 	err = q.find()
 	fmt.Println(user)
 	return
 }
 
-func Authenticate(u *user.User) error {
-	var tmpUser user.User
+func Authenticate(u *models.User) error {
+	var tmpUser models.User
 	q := findOneQuery{
-		Model: &tmpUser,
-		Filter: bson.M{
+		model: &tmpUser,
+		filter: bson.M{
 			"username": u.Username,
 		},
-		Collection: "users",
+		collection: "users",
 	}
 
 	err := q.find()
@@ -48,6 +48,7 @@ func Authenticate(u *user.User) error {
 		return err
 	}
 
+	//TODO This logic should be in the middle package
 	ok := u.Check(tmpUser.Password)
 	if !ok {
 		return errors.New("password incorrect")
@@ -56,13 +57,13 @@ func Authenticate(u *user.User) error {
 	return nil
 }
 
-func UsernameTaken(u *user.User) (err error) {
-	var tmpUser user.User
+func UsernameTaken(u *models.User) (err error) {
+	var tmpUser models.User
 	q1 := findOneQuery{
-		Model:      &tmpUser,
-		Filter:     bson.M{"username": u.Username},
-		Options:    options.FindOne(),
-		Collection: "users",
+		model:      &tmpUser,
+		filter:     bson.M{"username": u.Username},
+		options:    options.FindOne(),
+		collection: "users",
 	}
 	err = q1.find()
 	if err == nil {

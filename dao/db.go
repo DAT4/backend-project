@@ -5,20 +5,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 type findOneQuery struct {
-	Model      interface{}
-	Filter     bson.M
-	Options    *options.FindOneOptions
-	Collection string
+	model      interface{}
+	filter     bson.M
+	options    *options.FindOneOptions
+	collection string
 }
 
 type addOneQuery struct {
-	Model      interface{}
-	Filter     bson.M
-	Collection string
+	model      interface{}
+	filter     bson.M
+	collection string
 }
 
 func connect(col string) (*mongo.Collection, *mongo.Client, error) {
@@ -36,16 +35,15 @@ func connect(col string) (*mongo.Collection, *mongo.Client, error) {
 }
 
 func (query *findOneQuery) find() error {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	col, cli, err := connect(query.Collection)
+	col, cli, err := connect(query.collection)
 	if err != nil {
 		return err
 	}
-	defer cli.Disconnect(ctx)
-	if query.Options == nil {
-		err = col.FindOne(ctx, query.Filter, options.FindOne()).Decode(query.Model)
+	defer cli.Disconnect(context.Background())
+	if query.options == nil {
+		err = col.FindOne(context.Background(), query.filter, options.FindOne()).Decode(query.model)
 	} else {
-		err = col.FindOne(ctx, query.Filter, query.Options).Decode(query.Model)
+		err = col.FindOne(context.Background(), query.filter, query.options).Decode(query.model)
 	}
 	if err != nil {
 		return err
@@ -54,11 +52,11 @@ func (query *findOneQuery) find() error {
 }
 
 func (query *addOneQuery) add() error {
-	col, cli, err := connect(query.Collection)
+	col, cli, err := connect(query.collection)
 	defer cli.Disconnect(context.Background())
 	if err != nil {
 		return err
 	}
-	_, err = col.InsertOne(context.Background(), query.Model)
+	_, err = col.InsertOne(context.Background(), query.model)
 	return err
 }

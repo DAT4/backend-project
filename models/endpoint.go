@@ -1,8 +1,6 @@
 package models
 
 import (
-	"github.com/DAT4/backend-project/middle"
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -12,12 +10,3 @@ type Endpoint struct {
 	Login   bool
 	Method  string
 }
-
-func (e Endpoint) Add(r *mux.Router) {
-	if e.Login {
-		r.Handle(e.Path, middle.AuthMiddleware(http.HandlerFunc(e.Handler))).Methods(e.Method)
-	} else {
-		r.HandleFunc(e.Path, e.Handler).Methods(e.Method)
-	}
-}
-

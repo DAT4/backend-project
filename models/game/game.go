@@ -5,32 +5,41 @@ import (
 )
 
 type Game struct {
-	State      GameState
-	Clients    map[*Client]bool
-	Broadcast  chan []byte
-	Register   chan *Client
-	Unregister chan *Client
+	state      GameState
+	clients    map[*Client]bool
+	broadcast  chan []byte
+	register   chan *Client
+	unregister chan *Client
+}
+
+func NewGame() *Game {
+	return &Game{
+		clients:    make(map[*Client]bool),
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+	}
 }
 
 func (g *Game) Run() {
 	for {
 		select {
-		case client := <-g.Register:
+		case client := <-g.register:
 			fmt.Println("Trying to connect new player")
-			err := client.SendStartCommand(assignPlayer(client.User.PlayerID))
+			err := client.sendStartCommand(assignPlayer(client.user.PlayerID))
 			if err != nil {
 				fmt.Println("error with json closing ws:", err)
-				close(client.Send)
+				close(client.send)
 				return
 			}
-			g.Clients[client] = true
+			g.clients[client] = true
 			fmt.Println("Player successfully connected")
-		case client := <-g.Unregister:
-			if _, ok := g.Clients[client]; ok {
-				delete(g.Clients, client)
-				close(client.Send)
+		case client := <-g.unregister:
+			if _, ok := g.clients[client]; ok {
+				delete(g.clients, client)
+				close(client.send)
 			}
-		case message := <-g.Broadcast:
+		case message := <-g.broadcast:
 			g.parse(message)
 		}
 	}
@@ -44,13 +53,13 @@ func (g *Game) parse(msg []byte) {
 }
 
 func (g *Game) sendMessageToAllClients(message []byte) {
-	for client := range g.Clients {
+	for client := range g.clients {
 		select {
-		case client.Send <- message:
+		case client.send <- message:
 			fmt.Println("Sending to client")
 		default:
-			close(client.Send)
-			delete(g.Clients, client)
+			close(client.send)
+			delete(g.clients, client)
 		}
 	}
 }

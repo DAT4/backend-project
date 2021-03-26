@@ -1,7 +1,7 @@
 package middle
 
 import (
-	"github.com/DAT4/backend-project/models/user"
+	"github.com/DAT4/backend-project/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
@@ -24,7 +24,7 @@ func got(err error) string {
 
 func TestPasswordValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.Password
+		input         models.Password
 		expectedError bool
 	}{
 		{"", true},
@@ -43,7 +43,7 @@ func TestPasswordValidation(t *testing.T) {
 
 func TestUsernameValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.Username
+		input         models.Username
 		expectedError bool
 	}{
 		{"", true},
@@ -63,7 +63,7 @@ func TestUsernameValidation(t *testing.T) {
 
 func TestEmailValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.Email
+		input         models.Email
 		expectedError bool
 	}{
 		{"", true},
@@ -83,7 +83,7 @@ func TestEmailValidation(t *testing.T) {
 
 func TestIpValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.Ip
+		input         models.Ip
 		expectedError bool
 	}{
 		{"", true},
@@ -117,7 +117,7 @@ func TestIpValidation(t *testing.T) {
 
 func TestMacValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.Mac
+		input         models.Mac
 		expectedError bool
 	}{
 		{"", true},
@@ -150,22 +150,22 @@ func TestMacValidation(t *testing.T) {
 
 func TestUserValidation(t *testing.T) {
 	var tests = []struct {
-		input         user.User
+		input         models.User
 		expectedError bool
 	}{
 		{
-			input: user.User{
+			input: models.User{
 				Id:       primitive.ObjectID{},
 				Username: "martin",
 				Password: "teSt123!#",
 				Email:    "s123123@student.dtu.dk",
-				Macs: []user.Mac{
+				Macs: []models.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []user.Ip{
+				Ips: []models.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",
@@ -176,18 +176,18 @@ func TestUserValidation(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			input: user.User{
+			input: models.User{
 				Id:       primitive.ObjectID{},
 				Username: "",
 				Password: "teSt123!#",
 				Email:    "s123123@student.dtu.dk",
-				Macs: []user.Mac{
+				Macs: []models.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []user.Ip{
+				Ips: []models.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",

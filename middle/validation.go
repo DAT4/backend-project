@@ -3,12 +3,12 @@ package middle
 import (
 	"errors"
 	"github.com/DAT4/backend-project/dao"
-	"github.com/DAT4/backend-project/models/user"
+	"github.com/DAT4/backend-project/models"
 	"regexp"
 	"unicode"
 )
 
-func Validate(user user.User) error {
+func Validate(user models.User) error {
 	var err error
 	err = dao.UsernameTaken(&user)
 	if err != nil {
@@ -29,7 +29,7 @@ func Validate(user user.User) error {
 	return nil
 }
 
-func validatePassword(password user.Password) error {
+func validatePassword(password models.Password) error {
 	var upp, low, num, sym bool
 
 	for _, char := range password {
@@ -58,7 +58,7 @@ func validatePassword(password user.Password) error {
 	return nil
 }
 
-func validateUsername(username user.Username) error {
+func validateUsername(username models.Username) error {
 	re, _ := regexp.Compile(`^[a-z]{4,20}$`)
 	ok := re.MatchString(string(username))
 	if !ok {
@@ -67,7 +67,7 @@ func validateUsername(username user.Username) error {
 	return nil
 }
 
-func validateEmail(email user.Email) error {
+func validateEmail(email models.Email) error {
 	re, _ := regexp.Compile(`^\w+@\w+\.\w+$`)
 	ok := re.MatchString(string(email))
 	if !ok {
@@ -76,7 +76,7 @@ func validateEmail(email user.Email) error {
 	return nil
 }
 
-func validateMac(mac user.Mac) error {
+func validateMac(mac models.Mac) error {
 	re, _ := regexp.Compile(`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`)
 	ok := re.MatchString(string(mac))
 	if !ok {
@@ -85,7 +85,7 @@ func validateMac(mac user.Mac) error {
 	return nil
 }
 
-func validateIp(ip user.Ip) error {
+func validateIp(ip models.Ip) error {
 	re, _ := regexp.Compile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`)
 	ok := re.MatchString(string(ip))
 	if !ok {

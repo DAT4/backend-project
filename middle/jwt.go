@@ -3,28 +3,39 @@ package middle
 import (
 	"errors"
 	"fmt"
-	"github.com/auth0/go-jwt-middleware"
+	"github.com/DAT4/backend-project/models"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
 	"net/http"
 	"strings"
+	"time"
 )
 
-const AppKey = "martin.mama.sh"
+const appKey = "martin.mama.sh"
+
+func MakeToken(u models.User) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user": u.Id,
+		"exp":  time.Now().Add(time.Hour * time.Duration(1)).Unix(),
+		"iat":  time.Now().Unix(),
+	})
+	return token.SignedString([]byte(appKey))
+}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(AppKey), nil
+			return []byte(appKey), nil
 		},
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 	return jwtMiddleware.Handler(next)
 }
 
-func ExtractClaims(tokenString string) (id string, err error) {
+func extractClaims(tokenString string) (id string, err error) {
 	claims := jwt.MapClaims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(AppKey), nil
+		return []byte(appKey), nil
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -36,7 +47,7 @@ func ExtractClaims(tokenString string) (id string, err error) {
 	return
 }
 
-func ExtractJWTToken(req *http.Request) (string, error) {
+func extractJWTToken(req *http.Request) (string, error) {
 	tokenString := req.Header.Get("Authorization")
 	if tokenString == "" {
 		return "", fmt.Errorf("Could not find token")

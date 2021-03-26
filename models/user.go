@@ -1,4 +1,4 @@
-package user
+package models
 
 import (
 	"fmt"
@@ -12,15 +12,14 @@ type Email string
 type Mac string
 type Ip string
 
-
 type User struct {
-	Id       primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	PlayerID int
-	Username Username
-	Password Password
-	Email    Email
-	Macs     []Mac
-	Ips      []Ip
+	Id       primitive.ObjectID `json:"-" bson:"_id,omitempty"`
+	PlayerID int                `json:"-"`
+	Username Username           `json:"username"`
+	Password Password           `json:"password"`
+	Email    Email              `json:"email"`
+	Macs     []Mac              `json:"-"`
+	Ips      []Ip               `json:"-"`
 }
 
 func (user *User) HashAndSalt() error {
@@ -43,4 +42,3 @@ func (user *User) Check(hashedPassword Password) bool {
 	}
 	return true
 }
-
