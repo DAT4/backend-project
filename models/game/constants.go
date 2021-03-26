@@ -1,0 +1,26 @@
+package game
+
+import "time"
+
+type GameState int8
+const (
+	Opening GameState = iota
+	Full
+	Empty
+	Closing
+)
+
+const (
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
+	maxMessageSize = 512
+)
+
+const (
+	READY byte = iota
+	CREATE
+	ASSIGN
+)
+
+

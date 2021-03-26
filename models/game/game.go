@@ -1,48 +1,27 @@
-package models
+package game
 
 import (
 	"fmt"
-)
-
-type GameState int8
-
-const (
-	Opening GameState = iota
-	Full
-	Empty
-	Closing
+	"github.com/DAT4/backend-project/models/user"
 )
 
 type Game struct {
-	Name       Username
+	Name       user.Username
 	state      GameState
 	clients    map[*Client]bool
 	players    [2]*Player
 	broadcast  chan []byte
-	register   chan *Client
+	Register   chan *Client
 	unregister chan *Client
 }
 
-func NewGame(name Username) *Game {
+func NewGame() *Game {
 	return &Game{
-		Name:       name,
 		clients:    make(map[*Client]bool),
 		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
+		Register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
-}
-
-const (
-	READY = iota
-	CREATE
-	ASSIGN
-)
-
-type message struct {
-	command  byte
-	playerId byte
-	startPos Position
 }
 
 func assignPlayer(number int) message {
@@ -69,47 +48,25 @@ func (g *Game) checkReady() bool {
 func (g *Game) Run() {
 	for {
 		select {
-		case client := <-g.register:
+		case client := <-g.Register:
 			fmt.Println("Trying to connect new player")
-			if x, ok := g.checkAndAppend(client.player); ok {
-				err := client.SendStartCommand(assignPlayer(x))
-				if err != nil {
-					fmt.Println("error with json closing ws:", err)
-					close(client.send)
-					return
-				}
-				g.clients[client] = true
-				fmt.Println("Player successfully connected")
-			} else {
-				close(client.send)
+			err := client.SendStartCommand(assignPlayer(client.User.PlayerID))
+			if err != nil {
+				fmt.Println("error with json closing ws:", err)
+				close(client.Send)
+				return
 			}
+			g.clients[client] = true
+			fmt.Println("Player successfully connected")
 		case client := <-g.unregister:
 			if _, ok := g.clients[client]; ok {
 				delete(g.clients, client)
-				close(client.send)
+				close(client.Send)
 			}
 		case message := <-g.broadcast:
 			g.Parse(message)
 		}
 	}
-}
-
-func (g *Game) checkAndAppend(p *Player) (int, bool) {
-	var space bool
-	var x int
-	for i := 0; i < 2; i++ {
-		if g.players[i] == nil {
-			x = i
-			space = true
-		} else if p.Username == g.players[i].Username {
-			return i, true
-		}
-	}
-	if space {
-		g.players[x] = p
-		return x, true
-	}
-	return 0, false
 }
 
 func (g *Game) Parse(msg []byte) {
@@ -122,10 +79,10 @@ func (g *Game) Parse(msg []byte) {
 func (g *Game) sendMessageToAllClients(message []byte) {
 	for client := range g.clients {
 		select {
-		case client.send <- message:
+		case client.Send <- message:
 			fmt.Println("Sending to client")
 		default:
-			close(client.send)
+			close(client.Send)
 			delete(g.clients, client)
 		}
 	}

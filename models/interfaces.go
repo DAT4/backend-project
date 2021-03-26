@@ -1,8 +1,10 @@
 package models
 
+import "github.com/DAT4/backend-project/models/game"
+
 type Router interface {
 	Run()
-	unregister(*Client)
-	register(*Client)
+	unregister(*game.Client)
+	register(*game.Client)
 	broadcast([]byte)
 }

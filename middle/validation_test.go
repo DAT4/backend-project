@@ -1,6 +1,7 @@
-package models
+package middle
 
 import (
+	"github.com/DAT4/backend-project/models/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
@@ -23,7 +24,7 @@ func got(err error) string {
 
 func TestPasswordValidation(t *testing.T) {
 	var tests = []struct {
-		input         Password
+		input         user.Password
 		expectedError bool
 	}{
 		{"", true},
@@ -33,7 +34,7 @@ func TestPasswordValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.validate()
+		err := validatePassword(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
@@ -42,7 +43,7 @@ func TestPasswordValidation(t *testing.T) {
 
 func TestUsernameValidation(t *testing.T) {
 	var tests = []struct {
-		input         Username
+		input         user.Username
 		expectedError bool
 	}{
 		{"", true},
@@ -53,7 +54,7 @@ func TestUsernameValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.validate()
+		err := validateUsername(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
@@ -62,7 +63,7 @@ func TestUsernameValidation(t *testing.T) {
 
 func TestEmailValidation(t *testing.T) {
 	var tests = []struct {
-		input         Email
+		input         user.Email
 		expectedError bool
 	}{
 		{"", true},
@@ -73,7 +74,7 @@ func TestEmailValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.validate()
+		err := validateEmail(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
@@ -82,7 +83,7 @@ func TestEmailValidation(t *testing.T) {
 
 func TestIpValidation(t *testing.T) {
 	var tests = []struct {
-		input         Ip
+		input         user.Ip
 		expectedError bool
 	}{
 		{"", true},
@@ -107,7 +108,7 @@ func TestIpValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.validate()
+		err := validateIp(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
@@ -116,7 +117,7 @@ func TestIpValidation(t *testing.T) {
 
 func TestMacValidation(t *testing.T) {
 	var tests = []struct {
-		input         Mac
+		input         user.Mac
 		expectedError bool
 	}{
 		{"", true},
@@ -140,7 +141,7 @@ func TestMacValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.validate()
+		err := validateMac(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
@@ -149,22 +150,22 @@ func TestMacValidation(t *testing.T) {
 
 func TestUserValidation(t *testing.T) {
 	var tests = []struct {
-		input         User
+		input         user.User
 		expectedError bool
 	}{
 		{
-			input: User{
+			input: user.User{
 				Id:       primitive.ObjectID{},
 				Username: "martin",
 				Password: "teSt123!#",
 				Email:    "s123123@student.dtu.dk",
-				Macs: []Mac{
+				Macs: []user.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []Ip{
+				Ips: []user.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",
@@ -175,18 +176,18 @@ func TestUserValidation(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			input: User{
+			input: user.User{
 				Id:       primitive.ObjectID{},
 				Username: "",
 				Password: "teSt123!#",
 				Email:    "s123123@student.dtu.dk",
-				Macs: []Mac{
+				Macs: []user.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []Ip{
+				Ips: []user.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",
@@ -199,7 +200,7 @@ func TestUserValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.input.Validate()
+		err := Validate(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}

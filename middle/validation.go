@@ -1,18 +1,35 @@
-package models
+package middle
 
 import (
 	"errors"
+	"github.com/DAT4/backend-project/dao/mongo"
+	"github.com/DAT4/backend-project/models/user"
 	"regexp"
 	"unicode"
 )
 
-type Username string
-type Password string
-type Email string
-type Mac string
-type Ip string
+func Validate(user user.User) error {
+	var err error
+	err = mongo.UsernameTaken(&user)
+	if err != nil {
+		return err
+	}
+	err = validatePassword(user.Password)
+	if err != nil {
+		return err
+	}
+	err = validateUsername(user.Username)
+	if err != nil {
+		return err
+	}
+	err = validateEmail(user.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-func (password Password) validate() error {
+func validatePassword(password user.Password) error {
 	var upp, low, num, sym bool
 
 	for _, char := range password{
@@ -41,7 +58,7 @@ func (password Password) validate() error {
 	return nil
 }
 
-func (username Username) validate() error {
+func validateUsername(username user.Username) error {
 	re, _ := regexp.Compile(`^[a-z]{4,20}$`)
 	ok := re.MatchString(string(username))
 	if !ok {
@@ -50,7 +67,7 @@ func (username Username) validate() error {
 	return nil
 }
 
-func (email Email) validate() error {
+func validateEmail(email user.Email) error {
 	re, _ := regexp.Compile(`^\w+@\w+\.\w+$`)
 	ok := re.MatchString(string(email))
 	if !ok {
@@ -59,7 +76,7 @@ func (email Email) validate() error {
 	return nil
 }
 
-func (mac Mac) validate() error{
+func validateMac(mac user.Mac) error{
 	re, _ := regexp.Compile(`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`)
 	ok := re.MatchString(string(mac))
 	if !ok {
@@ -68,7 +85,7 @@ func (mac Mac) validate() error{
 	return nil
 }
 
-func (ip Ip) validate() error{
+func validateIp(ip user.Ip) error{
 	re, _ := regexp.Compile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`)
 	ok := re.MatchString(string(ip))
 	if !ok {
@@ -76,3 +93,5 @@ func (ip Ip) validate() error{
 	}
 	return nil
 }
+
+

@@ -1,50 +1,15 @@
-package models
+package middle
 
 import (
 	"errors"
 	"fmt"
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
-	"io"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const AppKey = "martin.mama.sh"
-
-func TokenHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-	user, err := UserFromJson(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, err.Error())
-		return
-	}
-	user, err = user.Authenticate()
-	if err != nil {
-		fmt.Println(err)
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, err.Error())
-		return
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user": user.Id,
-		"exp":  time.Now().Add(time.Hour * time.Duration(1)).Unix(),
-		"iat":  time.Now().Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(AppKey))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, `{"error":"token_generation_failed"}`)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{"token":"`+tokenString+`"}`)
-	return
-}
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
@@ -55,6 +20,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 	return jwtMiddleware.Handler(next)
 }
+
 func ExtractClaims(tokenString string) (id string, err error) {
 	claims := jwt.MapClaims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
