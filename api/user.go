@@ -1,14 +1,14 @@
 package api
 
 import (
-	"github.com/DAT4/backend-project/dao/mongo"
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"net/http"
 )
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	u , err := middle.UserFromJson(r.Body)
+	u, err := middle.UserFromJson(r.Body)
 	if err != nil {
 		handleHttpError(w, err, http.StatusNotAcceptable)
 		return
@@ -23,7 +23,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		handleHttpError(w, err, http.StatusTeapot)
 		return
 	}
-	err = mongo.Create(&u)
+	err = dao.Create(&u)
 	if err != nil {
 		handleHttpError(w, err, http.StatusTeapot)
 		return

@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"github.com/DAT4/backend-project/dao/mongo"
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"github.com/form3tech-oss/jwt-go"
 	"io"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TokenHandler(w http.ResponseWriter, r *http.Request) {
+func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	u, err := middle.UserFromJson(r.Body)
 	if err != nil {
@@ -18,7 +18,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	err = mongo.Authenticate(&u)
+	err = dao.Authenticate(&u)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)

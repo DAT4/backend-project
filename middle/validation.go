@@ -2,7 +2,7 @@ package middle
 
 import (
 	"errors"
-	"github.com/DAT4/backend-project/dao/mongo"
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/models/user"
 	"regexp"
 	"unicode"
@@ -10,7 +10,7 @@ import (
 
 func Validate(user user.User) error {
 	var err error
-	err = mongo.UsernameTaken(&user)
+	err = dao.UsernameTaken(&user)
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func Validate(user user.User) error {
 func validatePassword(password user.Password) error {
 	var upp, low, num, sym bool
 
-	for _, char := range password{
+	for _, char := range password {
 		switch {
 		case unicode.IsUpper(char):
 			upp = true
@@ -76,7 +76,7 @@ func validateEmail(email user.Email) error {
 	return nil
 }
 
-func validateMac(mac user.Mac) error{
+func validateMac(mac user.Mac) error {
 	re, _ := regexp.Compile(`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`)
 	ok := re.MatchString(string(mac))
 	if !ok {
@@ -85,7 +85,7 @@ func validateMac(mac user.Mac) error{
 	return nil
 }
 
-func validateIp(ip user.Ip) error{
+func validateIp(ip user.Ip) error {
 	re, _ := regexp.Compile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`)
 	ok := re.MatchString(string(ip))
 	if !ok {
@@ -93,5 +93,3 @@ func validateIp(ip user.Ip) error{
 	}
 	return nil
 }
-
-

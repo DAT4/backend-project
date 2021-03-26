@@ -1,4 +1,4 @@
-package mongo
+package dao
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-type FindOneQuery struct {
+type findOneQuery struct {
 	Model      interface{}
 	Filter     bson.M
 	Options    *options.FindOneOptions
 	Collection string
 }
 
-type AddOneQuery struct {
+type addOneQuery struct {
 	Model      interface{}
 	Filter     bson.M
 	Collection string
@@ -26,18 +26,16 @@ func connect(col string) (*mongo.Collection, *mongo.Client, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
+	err = client.Connect(context.Background())
 	if err != nil {
-		client.Disconnect(ctx)
+		client.Disconnect(context.Background())
 		return nil, nil, err
 	}
-	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	collection := client.Database("backend").Collection(col)
 	return collection, client, nil
 }
 
-func (query *FindOneQuery) Find() error {
+func (query *findOneQuery) find() error {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	col, cli, err := connect(query.Collection)
 	if err != nil {
@@ -55,17 +53,12 @@ func (query *FindOneQuery) Find() error {
 	return nil
 }
 
-func (query *AddOneQuery) Add() error {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func (query *addOneQuery) add() error {
 	col, cli, err := connect(query.Collection)
-	defer cli.Disconnect(ctx)
+	defer cli.Disconnect(context.Background())
 	if err != nil {
 		return err
 	}
-	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	_, err = col.InsertOne(ctx, query.Model)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err = col.InsertOne(context.Background(), query.Model)
+	return err
 }

@@ -1,4 +1,4 @@
-package mongo
+package dao
 
 import (
 	"errors"
@@ -10,16 +10,12 @@ import (
 )
 
 func Create(user *user.User) (err error) {
-	q2 := AddOneQuery{
+	q2 := addOneQuery{
 		Model:      &user,
 		Filter:     nil,
 		Collection: "users",
 	}
-	err = q2.Add()
-	if err != nil {
-		return err
-	}
-	return nil
+	return q2.add()
 }
 
 func UserFromId(id string) (user user.User, err error) {
@@ -27,19 +23,19 @@ func UserFromId(id string) (user user.User, err error) {
 	if err != nil {
 		return
 	}
-	q := FindOneQuery{
+	q := findOneQuery{
 		Model:      &user,
 		Filter:     bson.M{"_id": _id},
 		Collection: "users",
 	}
-	err = q.Find()
+	err = q.find()
 	fmt.Println(user)
 	return
 }
 
 func Authenticate(u *user.User) error {
 	var tmpUser user.User
-	q := FindOneQuery{
+	q := findOneQuery{
 		Model: &tmpUser,
 		Filter: bson.M{
 			"username": u.Username,
@@ -47,7 +43,7 @@ func Authenticate(u *user.User) error {
 		Collection: "users",
 	}
 
-	err := q.Find()
+	err := q.find()
 	if err != nil {
 		return err
 	}
@@ -62,13 +58,13 @@ func Authenticate(u *user.User) error {
 
 func UsernameTaken(u *user.User) (err error) {
 	var tmpUser user.User
-	q1 := FindOneQuery{
+	q1 := findOneQuery{
 		Model:      &tmpUser,
 		Filter:     bson.M{"username": u.Username},
 		Options:    options.FindOne(),
 		Collection: "users",
 	}
-	err = q1.Find()
+	err = q1.find()
 	if err == nil {
 		return errors.New("A user already exists with this name")
 	}

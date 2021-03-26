@@ -15,7 +15,16 @@ var upgrader = websocket.Upgrader{
 var Game *game.Game
 
 func init() {
-	Game = game.NewGame()
+	Game = NewGame()
+}
+
+func NewGame() *game.Game {
+	return &game.Game{
+		Clients:    make(map[*game.Client]bool),
+		Broadcast:  make(chan []byte),
+		Register:   make(chan *game.Client),
+		Unregister: make(chan *game.Client),
+	}
 }
 
 func ServeWs(u *user.User, g *game.Game, w http.ResponseWriter, r *http.Request) {

@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-
 type Client struct {
 	User *user.User
 	Game *Game
@@ -22,7 +21,7 @@ type Client struct {
 
 func (c *Client) ReadPump() {
 	defer func() {
-		c.Game.unregister <- c
+		c.Game.Unregister <- c
 		c.Conn.Close()
 	}()
 
@@ -38,7 +37,7 @@ func (c *Client) ReadPump() {
 			}
 			break
 		}
-		c.Game.broadcast <- message //[id][x][y]//[command][message/string]
+		c.Game.Broadcast <- message //[id][x][y]//[command][message/string]
 	}
 
 }
@@ -76,4 +75,3 @@ func (c *Client) SendStartCommand(msg message) error {
 	}
 	return nil
 }
-

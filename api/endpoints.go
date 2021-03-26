@@ -9,17 +9,17 @@ func AddEndpoints(r *mux.Router) {
 	endpoints := []models.Endpoint{
 		{
 			Path:    "/login",
-			Handler: TokenHandler,
+			Handler: tokenHandler,
 			Method:  "POST",
 		},
 		{
 			Path:    "/register",
-			Handler: CreateUser,
+			Handler: createUser,
 			Method:  "POST",
 		},
 		{
 			Path:    "/join",
-			Handler: JoinWebsocketConnection,
+			Handler: joinWebsocketConnection,
 			Login:   true,
 			Method:  "GET",
 		},

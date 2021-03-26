@@ -2,7 +2,7 @@ package middle
 
 import (
 	"encoding/json"
-	"github.com/DAT4/backend-project/dao/mongo"
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/models/user"
 	"io"
 	"net/http"
@@ -22,6 +22,6 @@ func UserFromToken(r *http.Request) (user user.User, err error) {
 	if err != nil {
 		return
 	}
-	user, err = mongo.UserFromId(id)
+	user, err = dao.UserFromId(id)
 	return
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func JoinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
+func joinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hello Peer")
 	u, err := middle.UserFromToken(r)
 	if err != nil {
@@ -14,4 +14,3 @@ func JoinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	middle.ServeWs(&u, middle.Game, w, r)
 }
-
