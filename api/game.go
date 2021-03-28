@@ -6,7 +6,6 @@ import (
 	"github.com/DAT4/backend-project/models"
 	"github.com/DAT4/backend-project/models/game"
 	"github.com/gorilla/websocket"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -17,18 +16,9 @@ var upgrader = websocket.Upgrader{
 
 func joinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hello Peer")
-	///u, err := middle.UserFromToken(r)
-	///if err != nil {
-	///	handleHttpError(w, err, http.StatusNotAcceptable)
-	///}
-	u := models.User{
-		Id:       primitive.ObjectID{},
-		PlayerID: 0,
-		Username: "mama",
-		Password: "123",
-		Email:    "lala@asd.sdl",
-		Macs:     nil,
-		Ips:      nil,
+	u, err := middle.UserFromToken(r)
+	if err != nil {
+		handleHttpError(w, err, http.StatusNotAcceptable)
 	}
 	serveWs(&u, middle.Game, w, r)
 }

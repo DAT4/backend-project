@@ -22,6 +22,7 @@ func AddEndpoints(r *mux.Router) {
 		{
 			Path:    "/join",
 			Handler: joinWebsocketConnection,
+			Login:   true,
 			Method:  "GET",
 		},
 	}
