@@ -72,7 +72,7 @@ func (c *Client) writePump() {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			c.conn.WriteMessage(websocket.TextMessage, message)
+			c.conn.WriteMessage(websocket.BinaryMessage, message)
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
@@ -83,8 +83,8 @@ func (c *Client) writePump() {
 
 }
 
-func (c *Client) sendStartCommand(msg message) error {
-	err := c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
+func (c *Client) sendStartCommand(msg message, others []byte) error {
+	err := c.conn.WriteMessage(websocket.BinaryMessage, msg.sendWithContent(others))
 	if err != nil {
 		return err
 	}

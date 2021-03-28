@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type message struct {
 	command  byte
 	playerId byte
@@ -12,5 +14,7 @@ func (m message) sendWithContent(command []byte) (out []byte) {
 }
 
 func (m message) send() []byte {
-	return []byte{m.playerId, m.x, m.y, m.command}
+	msg := []byte{m.playerId, m.x, m.y, m.command}
+	fmt.Println(msg)
+	return msg
 }
