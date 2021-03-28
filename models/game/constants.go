@@ -3,6 +3,7 @@ package game
 import "time"
 
 type GameState int8
+
 const (
 	Opening GameState = iota
 	Full
@@ -21,6 +22,14 @@ const (
 	READY byte = iota
 	CREATE
 	ASSIGN
+	MOVE
+	WRITE
 )
 
-
+//Directions
+const (
+	LEFT = iota
+	RIGHT
+	UP
+	DOWN
+)

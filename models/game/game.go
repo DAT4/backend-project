@@ -6,6 +6,7 @@ import (
 
 type Game struct {
 	state      GameState
+	counter    int
 	clients    map[*Client]bool
 	broadcast  chan []byte
 	register   chan *Client
@@ -26,7 +27,8 @@ func (g *Game) Run() {
 		select {
 		case client := <-g.register:
 			fmt.Println("Trying to connect new player")
-			err := client.sendStartCommand(assignPlayer(client.user.PlayerID))
+			g.counter++
+			err := client.sendStartCommand(assignPlayer(g.counter))
 			if err != nil {
 				fmt.Println("error with json closing ws:", err)
 				close(client.send)

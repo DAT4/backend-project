@@ -53,6 +53,7 @@ func Authenticate(u *models.User) error {
 	if !ok {
 		return errors.New("password incorrect")
 	}
+	u.Id = tmpUser.Id
 	u.Password = tmpUser.Password
 	return nil
 }

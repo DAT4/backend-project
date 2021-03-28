@@ -84,7 +84,7 @@ func (c *Client) writePump() {
 }
 
 func (c *Client) sendStartCommand(msg message) error {
-	err := c.conn.WriteJSON(&msg)
+	err := c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
 	if err != nil {
 		return err
 	}

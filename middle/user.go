@@ -2,6 +2,7 @@ package middle
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/models"
 	"io"
@@ -19,6 +20,7 @@ func UserFromToken(r *http.Request) (user models.User, err error) {
 		return
 	}
 	id, err := extractClaims(token)
+	fmt.Println(id)
 	if err != nil {
 		return
 	}

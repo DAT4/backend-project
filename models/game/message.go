@@ -7,8 +7,8 @@ type message struct {
 	y        byte
 }
 
-func (m message) sendWithContent(content string) (out []byte) {
-	return append(m.send(), []byte(content)...)
+func (m message) sendWithContent(command []byte) (out []byte) {
+	return append(m.send(), command...)
 }
 
 func (m message) send() []byte {
