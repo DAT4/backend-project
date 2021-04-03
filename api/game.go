@@ -16,9 +16,13 @@ var upgrader = websocket.Upgrader{
 
 func joinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hello Peer")
-	u, err := middle.UserFromToken(r)
+	token, err := middle.ExtractJWTToken(r, middle.AUTHENTICATION)
 	if err != nil {
-		handleHttpError(w, err, http.StatusNotAcceptable)
+		handleHttpError(w, "ExtractToken", err, http.StatusUnauthorized)
+	}
+	u, err := middle.UserFromToken(token)
+	if err != nil {
+		handleHttpError(w, "UserFromToken", err, http.StatusNotAcceptable)
 	}
 	serveWs(&u, middle.Game, w, r)
 }

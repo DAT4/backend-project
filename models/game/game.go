@@ -29,7 +29,7 @@ func (g *Game) Run() {
 			fmt.Println("Trying to connect new player")
 			g.counter++
 			players := make([]byte, 0, len(g.clients))
-			for _, id := range g.clients{
+			for _, id := range g.clients {
 				players = append(players, id)
 			}
 			err := client.sendStartCommand(assignPlayer(g.counter), players)
@@ -76,7 +76,7 @@ func assignPlayer(number int) message {
 	return message{
 		command:  CREATE,
 		playerId: byte(number),
-		x:        0,
-		y:        0,
+		x:        1,
+		y:        1,
 	}
 }

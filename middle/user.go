@@ -6,7 +6,6 @@ import (
 	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/models"
 	"io"
-	"net/http"
 )
 
 func UserFromJson(data io.ReadCloser) (user models.User, err error) {
@@ -14,11 +13,7 @@ func UserFromJson(data io.ReadCloser) (user models.User, err error) {
 	return
 }
 
-func UserFromToken(r *http.Request) (user models.User, err error) {
-	token, err := extractJWTToken(r)
-	if err != nil {
-		return
-	}
+func UserFromToken(token string) (user models.User, err error) {
 	id, err := extractClaims(token)
 	fmt.Println(id)
 	if err != nil {

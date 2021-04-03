@@ -20,6 +20,11 @@ func AddEndpoints(r *mux.Router) {
 			Method:  "POST",
 		},
 		{
+			Path:    "/refresh",
+			Handler: refreshToken,
+			Method:  "GET",
+		},
+		{
 			Path:    "/join",
 			Handler: joinWebsocketConnection,
 			Login:   true,
