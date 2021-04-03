@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func handleHttpError(w http.ResponseWriter, err error, status int) {
+func handleHttpError(w http.ResponseWriter, context string, err error, status int) {
 	fmt.Println(err)
 	w.WriteHeader(status)
-	w.Write([]byte(err.Error()))
+	w.Write([]byte(context + ": " + err.Error()))
 }
