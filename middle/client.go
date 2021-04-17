@@ -2,36 +2,96 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package game
+package middle
 
 import (
+	"fmt"
 	"github.com/DAT4/backend-project/models"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
+	Id   int
 	user *models.User
 	game *Game
 	conn *websocket.Conn
 	send chan []byte
 }
 
-func NewClient(u *models.User, g *Game, conn *websocket.Conn) {
-	c := &Client{}
-	c.init(u, g, conn)
+func NewClient(g *Game, conn *websocket.Conn) {
+	user, err := authenticateClient(conn)
+	if err != nil {
+		return
+	}
+
+	g.counter++
+	c := &Client{
+		Id:   g.counter,
+		user: user,
+		game: g,
+		conn: conn,
+		send: make(chan []byte, 256),
+	}
+	c.game.register <- c
+
+	err = c.sendStartCommand(g)
+	if err != nil {
+		return
+	}
+
 	go c.writePump()
 	go c.readPump()
 }
 
-func (c *Client) init(u *models.User, g *Game, conn *websocket.Conn) {
-	c.user = u
-	c.game = g
-	c.conn = conn
-	c.send = make(chan []byte, 256)
-	c.game.register <- c
+func (c *Client) sendStartCommand(g *Game) error {
+	msg := message{
+		command:  CREATE,
+		playerId: byte(c.Id),
+		x:        1,
+		y:        1,
+	}
+
+	players := make([]byte, 0, len(g.clients))
+
+	for _, id := range g.clients {
+		players = append(players, id)
+	}
+
+	return c.conn.WriteMessage(websocket.BinaryMessage, msg.sendWithContent(players))
+}
+
+func authenticateClient(c *websocket.Conn) (u *models.User, err error) {
+	for {
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		if message[3] == 0 {
+			token, err := getToken(string(message[3:]))
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println(token)
+			u, err := UserFromToken(token)
+			if err != nil {
+				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
+				return nil, err
+			}
+			return &u, nil
+		}
+	}
+}
+
+func getToken(token string) (string, error){
+	tokenParts := strings.Split(token, " ")
+	if len(tokenParts) < 2 {
+		return tokenParts[0], nil
+	}
+	return tokenParts[1], nil
 }
 
 func (c *Client) readPump() {
@@ -51,6 +111,14 @@ func (c *Client) readPump() {
 				log.Printf("error: %v", err)
 			}
 			break
+		}
+		if message[3] == 0 {
+			u, err := UserFromToken(string(message[3:]))
+			if err != nil {
+				return
+			}
+			c.user = &u
+			continue
 		}
 		c.game.broadcast <- message //[id][x][y]//[command][message/string]
 	}
@@ -81,12 +149,4 @@ func (c *Client) writePump() {
 		}
 	}
 
-}
-
-func (c *Client) sendStartCommand(msg message, others []byte) error {
-	err := c.conn.WriteMessage(websocket.BinaryMessage, msg.sendWithContent(others))
-	if err != nil {
-		return err
-	}
-	return nil
 }

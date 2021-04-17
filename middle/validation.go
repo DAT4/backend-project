@@ -42,8 +42,6 @@ func validatePassword(password models.Password) error {
 			num = true
 		case unicode.IsPunct(char):
 			sym = true
-		default:
-			return errors.New("password contains some shit")
 		}
 	}
 

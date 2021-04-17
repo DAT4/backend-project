@@ -2,7 +2,8 @@ import requests
 import uuid
 import re
 
-url = 'http://localhost:8056/login'
+#url = 'http://localhost:8056/login'
+url = 'https://api.backend.mama.sh/login'
 #ip = requests.get('http://httpbin.org/ip').json()['origin'].strip()
 #mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 data = {

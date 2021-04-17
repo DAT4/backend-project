@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	go middle.Game.Run()
+	go middle.G.Run()
 	startREST()
 }
 
