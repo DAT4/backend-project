@@ -19,6 +19,6 @@ func startREST() {
 	r := mux.NewRouter()
 	api.AddEndpoints(r)
 	handler := cors.Default().Handler(r)
-	fmt.Println("Running on port 8056")
-	log.Fatal(http.ListenAndServe(":8056", handler))
+	fmt.Println("Running on port 1001")
+	log.Fatal(http.ListenAndServe(":1001", handler))
 }

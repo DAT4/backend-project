@@ -21,7 +21,8 @@ type addOneQuery struct {
 }
 
 func connect(col string) (*mongo.Collection, *mongo.Client, error) {
-	client, err := mongo.NewClient()
+	opt := options.Client().ApplyURI("mongodb://mongo:27017")
+	client, err := mongo.NewClient(opt)
 	if err != nil {
 		return nil, nil, err
 	}

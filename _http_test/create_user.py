@@ -5,11 +5,11 @@ import uuid
 if __name__ == '__main__':
     url = 'https://api.backend.mama.sh/register'
 
-    ip = get('http://httpbin.org/ip').json()['origin'].strip()
-    print(ip)
-    mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+    #ip = get('http://httpbin.org/ip').json()['origin'].strip()
+    #print(ip)
+    #mac = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
     data = {
-        'username': 'nitram',
+        'username': 'martin',
         'email': 'hej@hej.hej',
         'password': 'T3stpass!',
     }
