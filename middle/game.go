@@ -2,6 +2,7 @@ package middle
 
 import (
 	"fmt"
+	"github.com/DAT4/backend-project/dao"
 )
 
 var G *Game
@@ -12,6 +13,7 @@ func init() {
 
 type Game struct {
 	state      GameState
+	Db         dao.DBase
 	counter    int
 	clients    map[*Client]byte
 	broadcast  chan []byte
@@ -28,7 +30,8 @@ func NewGame() *Game {
 	}
 }
 
-func (g *Game) Run() {
+func (g *Game) Run(db dao.DBase) {
+	g.Db = db
 	for {
 		select {
 		case client := <-g.register:
@@ -44,7 +47,6 @@ func (g *Game) Run() {
 	}
 }
 
-
 func (g *Game) sendMessageToAllClients(message []byte) {
 	fmt.Println(message)
 
@@ -58,4 +60,3 @@ func (g *Game) sendMessageToAllClients(message []byte) {
 		}
 	}
 }
-

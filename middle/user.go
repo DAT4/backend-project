@@ -13,12 +13,12 @@ func UserFromJson(data io.ReadCloser) (user models.User, err error) {
 	return
 }
 
-func UserFromToken(token string) (user models.User, err error) {
+func UserFromToken(token string, db dao.DBase) (user models.User, err error) {
 	id, err := extractClaims(token)
 	fmt.Println(id)
 	if err != nil {
 		return
 	}
-	user, err = dao.UserFromId(id)
+	user, err = db.UserFromId(id)
 	return
 }

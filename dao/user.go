@@ -9,16 +9,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Create(user *models.User) (err error) {
+type MongoDB struct{}
+
+func (m *MongoDB) Create(u *models.User) (err error) {
 	q2 := addOneQuery{
-		model:      &user,
+		model:      &u,
 		filter:     nil,
 		collection: "users",
 	}
 	return q2.add()
 }
-
-func UserFromId(id string) (user models.User, err error) {
+func (m *MongoDB) UserFromId(id string) (user models.User, err error) {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
@@ -32,8 +33,7 @@ func UserFromId(id string) (user models.User, err error) {
 	fmt.Println(user)
 	return
 }
-
-func Authenticate(u *models.User) error {
+func (m *MongoDB) Authenticate(u *models.User) error {
 	var tmpUser models.User
 	q := findOneQuery{
 		model: &tmpUser,
@@ -57,8 +57,7 @@ func Authenticate(u *models.User) error {
 	u.Password = tmpUser.Password
 	return nil
 }
-
-func UsernameTaken(u *models.User) (err error) {
+func (m *MongoDB) UsernameTaken(u *models.User) (err error) {
 	var tmpUser models.User
 	q1 := findOneQuery{
 		model:      &tmpUser,

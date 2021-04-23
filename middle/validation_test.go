@@ -1,6 +1,7 @@
 package middle
 
 import (
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
@@ -68,9 +69,9 @@ func TestEmailValidation(t *testing.T) {
 	}{
 		{"", true},
 		{"123", true},
-		{"mail@google.dk", true},
-		{"bhsi@dtu.dk", true},
-		{"s195469@student.dtu.dk", false},
+		{"mail@google.dk", false},
+		{"bhsi@dtu.dk", false},
+		{"s195469@studenteqqw1231$#@!....dtu.dk", true},
 	}
 
 	for _, test := range tests {
@@ -156,9 +157,9 @@ func TestUserValidation(t *testing.T) {
 		{
 			input: models.User{
 				Id:       primitive.ObjectID{},
-				Username: "martin",
+				Username: "martini",
 				Password: "teSt123!#",
-				Email:    "s123123@student.dtu.dk",
+				Email:    "s123123@studentdtu.dk",
 				Macs: []models.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
@@ -180,7 +181,7 @@ func TestUserValidation(t *testing.T) {
 				Id:       primitive.ObjectID{},
 				Username: "",
 				Password: "teSt123!#",
-				Email:    "s123123@student.dtu.dk",
+				Email:    "s123123@studedtu.dk",
 				Macs: []models.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
@@ -199,10 +200,36 @@ func TestUserValidation(t *testing.T) {
 		},
 	}
 
+	db := CreateTestDB()
+
 	for _, test := range tests {
-		err := Validate(test.input)
+		err := Validate(test.input, &db)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
 	}
+}
+
+func CreateTestDB() dao.TestDB {
+	db := dao.TestDB{}
+	users := []models.User{
+		{
+			Id:       primitive.NewObjectID(),
+			PlayerID: 0,
+			Username: "martin",
+			Password: "T3stpass!",
+			Email:    "mail@mama.sh",
+		},
+		{
+			Id:       primitive.NewObjectID(),
+			PlayerID: 0,
+			Username: "simon",
+			Password: "hej",
+			Email:    "simon@gmail.dk",
+		},
+	}
+	for _, user := range users {
+		_ = db.Create(&user)
+	}
+	return db
 }

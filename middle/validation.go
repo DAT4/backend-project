@@ -8,9 +8,9 @@ import (
 	"unicode"
 )
 
-func Validate(user models.User) error {
+func Validate(user models.User, db dao.DBase) error {
 	var err error
-	err = dao.UsernameTaken(&user)
+	err = db.UsernameTaken(&user)
 	if err != nil {
 		return err
 	}
@@ -66,10 +66,10 @@ func validateUsername(username models.Username) error {
 }
 
 func validateEmail(email models.Email) error {
-	re, _ := regexp.Compile(`^\w+@\w+\.\w+$`)
+	re, _ := regexp.Compile(`^\w+@\w+\.(\w|[.])+$`)
 	ok := re.MatchString(string(email))
 	if !ok {
-		return errors.New("username is invalid")
+		return errors.New("email is invalid")
 	}
 	return nil
 }

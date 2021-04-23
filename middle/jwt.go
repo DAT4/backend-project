@@ -16,7 +16,7 @@ const appKey = "martin.mama.sh"
 func MakeToken(u models.User) (map[string]string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": u.Id,
-		"exp":  time.Now().Add(time.Minute * 15).Unix(),
+		"exp":  time.Now().Add(time.Second * 15).Unix(),
 		"iat":  time.Now().Unix(),
 	})
 

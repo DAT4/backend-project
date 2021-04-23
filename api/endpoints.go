@@ -1,27 +1,35 @@
 package api
 
 import (
+	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"github.com/DAT4/backend-project/models"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func AddEndpoints(r *mux.Router) {
+func byLazy(fn func(w http.ResponseWriter, r *http.Request, base dao.DBase), db dao.DBase) http.HandlerFunc {
+	//Lazy evaluation
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r, db)
+	}
+}
+
+func AddEndpoints(r *mux.Router, db dao.DBase) {
 	endpoints := []models.Endpoint{
 		{
 			Path:    "/login",
-			Handler: tokenHandler,
+			Handler: byLazy(tokenHandler, db),
 			Method:  "POST",
 		},
 		{
 			Path:    "/register",
-			Handler: createUser,
+			Handler: byLazy(createUser, db),
 			Method:  "POST",
 		},
 		{
 			Path:    "/refresh",
-			Handler: refreshToken,
+			Handler: byLazy(refreshToken, db),
 			Method:  "GET",
 		},
 		{

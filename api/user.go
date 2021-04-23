@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func createUser(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 	w.Header().Add("Content-Type", "application/json")
 	u, err := middle.UserFromJson(r.Body)
 	if err != nil {
 		handleHttpError(w, "UserFromJson", err, http.StatusNotAcceptable)
 		return
 	}
-	err = middle.Validate(u)
+	err = middle.Validate(u, base)
 	if err != nil {
 		handleHttpError(w, "ValidateUser", err, http.StatusNotAcceptable)
 		return
@@ -23,7 +23,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		handleHttpError(w, "HashAndSalt", err, http.StatusTeapot)
 		return
 	}
-	err = dao.Create(&u)
+	err = base.Create(&u)
 	if err != nil {
 		handleHttpError(w, "CreateUser", err, http.StatusTeapot)
 		return

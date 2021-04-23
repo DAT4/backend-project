@@ -23,7 +23,7 @@ type Client struct {
 }
 
 func NewClient(g *Game, conn *websocket.Conn) {
-	user, err := authenticateClient(conn)
+	user, err := authenticateClient(conn, g)
 	if err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func (c *Client) sendStartCommand(g *Game) error {
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg.sendWithContent(players))
 }
 
-func authenticateClient(c *websocket.Conn) (u *models.User, err error) {
+func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) {
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
@@ -76,7 +76,7 @@ func authenticateClient(c *websocket.Conn) (u *models.User, err error) {
 				return nil, err
 			}
 			fmt.Println(token)
-			u, err := UserFromToken(token)
+			u, err := UserFromToken(token, g.Db)
 			if err != nil {
 				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
 				return nil, err
@@ -86,7 +86,7 @@ func authenticateClient(c *websocket.Conn) (u *models.User, err error) {
 	}
 }
 
-func getToken(token string) (string, error){
+func getToken(token string) (string, error) {
 	tokenParts := strings.Split(token, " ")
 	if len(tokenParts) < 2 {
 		return tokenParts[0], nil
@@ -113,7 +113,7 @@ func (c *Client) readPump() {
 			break
 		}
 		if message[3] == 0 {
-			u, err := UserFromToken(string(message[3:]))
+			u, err := UserFromToken(string(message[3:]), c.game.Db)
 			if err != nil {
 				return
 			}

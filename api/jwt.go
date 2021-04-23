@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func tokenHandler(w http.ResponseWriter, r *http.Request) {
+func tokenHandler(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 	w.Header().Add("Content-Type", "application/json")
 
 	u, err := middle.UserFromJson(r.Body)
@@ -16,7 +16,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.Authenticate(&u)
+	err = base.Authenticate(&u)
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return
@@ -36,18 +36,18 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func refreshToken(w http.ResponseWriter, r *http.Request) {
+func refreshToken(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 	w.Header().Add("Content-Type", "application/json")
 	token, err := middle.ExtractJWTToken(r, middle.REFRESH)
 	if err != nil {
 		return
 	}
-	u, err := middle.UserFromToken(token)
+	u, err := middle.UserFromToken(token, base)
 	if err != nil {
 		handleHttpError(w, "UserFromToken", err, http.StatusUnauthorized)
 	}
 
-	err = dao.Authenticate(&u)
+	err = base.Authenticate(&u)
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return
