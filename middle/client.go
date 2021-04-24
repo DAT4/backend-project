@@ -75,12 +75,13 @@ func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) 
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(token)
 			u, err := UserFromToken(token, g.Db)
 			if err != nil {
+				fmt.Println(err)
 				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
 				return nil, err
 			}
+			fmt.Println("ok")
 			return &u, nil
 		}
 	}

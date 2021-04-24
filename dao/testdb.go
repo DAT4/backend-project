@@ -17,7 +17,7 @@ func (t *TestDB) Create(u *models.User) (err error) {
 }
 func (t *TestDB) UserFromId(id string) (user models.User, err error) {
 	for _, u := range t.users {
-		if id == u.Id.String() {
+		if id == u.Id.Hex() {
 			return u, nil
 		}
 	}
@@ -35,6 +35,7 @@ func (t *TestDB) Authenticate(u *models.User) (err error) {
 	for _, dbu := range t.users {
 		if dbu.Username == u.Username {
 			if dbu.Password == u.Password {
+				u.Id = dbu.Id
 				return nil
 			}
 			return errors.New("wrong password")

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/DAT4/backend-project/middle"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -13,7 +12,6 @@ var upgrader = websocket.Upgrader{
 }
 
 func joinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hello Peer")
 	serveWs(middle.G, w, r)
 }
 
