@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"net/http"
@@ -18,7 +17,6 @@ func tokenHandler(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 	}
 
 	err = base.Authenticate(&u)
-	fmt.Println(u)
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return

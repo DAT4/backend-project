@@ -22,7 +22,6 @@ func MakeToken(u models.User) (map[string]string, error) {
 
 	t, err := token.SignedString([]byte(appKey))
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -34,7 +33,6 @@ func MakeToken(u models.User) (map[string]string, error) {
 
 	rt, err := token.SignedString([]byte(appKey))
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

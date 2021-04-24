@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -115,12 +116,15 @@ func TestJoinWebsocketConnection(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		_, p, err := ws.ReadMessage()
+		_, got, err := ws.ReadMessage()
 		if err != nil {
 			t.Error(err)
 		}
+		expected := []byte{1, 1, 1, 1}
 
-		fmt.Println(p)
+		if !reflect.DeepEqual(got, expected) {
+			t.Errorf("Expected %v got %v", expected, got)
+		}
 	})
 }
 

@@ -49,7 +49,6 @@ func (g *Game) Run(db dao.DBase) {
 
 func (g *Game) sendMessageToAllClients(message []byte) {
 	fmt.Println(message)
-
 	for client := range g.clients {
 		select {
 		case client.send <- message:

@@ -15,6 +15,6 @@ func (m message) sendWithContent(command []byte) (out []byte) {
 
 func (m message) send() []byte {
 	msg := []byte{m.playerId, m.x, m.y, m.command}
-	fmt.Println(msg)
+	fmt.Println("server: ", msg)
 	return msg
 }
