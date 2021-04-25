@@ -35,6 +35,7 @@ func (t *TestDB) Authenticate(u *models.User) (err error) {
 	for _, dbu := range t.users {
 		if dbu.Username == u.Username {
 			if dbu.Password == u.Password {
+				u.PlayerID = dbu.PlayerID
 				u.Id = dbu.Id
 				return nil
 			}

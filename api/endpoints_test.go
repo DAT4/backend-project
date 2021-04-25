@@ -56,8 +56,52 @@ func TestTokenHandler(t *testing.T) {
 	})
 }
 func TestCreateUser(t *testing.T) {
+	testDb := CreateTestDB([]models.User{})
+	t.Run("Testing creating a user", func(t *testing.T) {
+
+		newUser := models.User{
+			Username: "martin",
+			Password: "T3stpass!",
+			Email:    "mail@mama.sh",
+		}
+
+		body, _ := json.Marshal(newUser)
+		request, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewReader(body))
+		response := httptest.NewRecorder()
+
+		createUser(response, request, testDb)
+
+		if response.Code != http.StatusCreated {
+			t.Errorf("Expected %v got %v", http.StatusCreated, response.Code)
+		}
+	})
+
 }
+
 func TestRefreshToken(t *testing.T) {
+	testDb := CreateTestDB([]models.User{
+		{
+			Username: "martin",
+			Password: "T3stpass!",
+			Email:    "mail@mama.sh",
+		},
+	})
+
+	t.Run("Testing creating a user", func(t *testing.T) {
+		ok, tokens := assertLogin(models.User{Username: "martin", Password: "T3stpass!"}, testDb)
+		if !ok {
+			t.Error("could not login")
+		}
+		request, _ := http.NewRequest(http.MethodGet, "/register", nil)
+		request.Header.Add("RefreshToken", tokens["refresh_token"])
+		response := httptest.NewRecorder()
+
+		refreshToken(response, request, testDb)
+
+		if response.Code != http.StatusOK {
+			t.Errorf("Expected %v got %v", http.StatusOK, response.Code)
+		}
+	})
 }
 
 func assertLogin(user models.User, db dao.DBase) (ok bool, token map[string]string) {
@@ -120,7 +164,7 @@ func TestJoinWebsocketConnection(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		expected := []byte{1, 1, 1, 1}
+		expected := []byte{0, 1, 1, 1}
 
 		if !reflect.DeepEqual(got, expected) {
 			t.Errorf("Expected %v got %v", expected, got)

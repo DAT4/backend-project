@@ -27,9 +27,8 @@ func NewClient(g *Game, conn *websocket.Conn) {
 		return
 	}
 
-	g.counter++
 	c := &Client{
-		Id:   g.counter,
+		Id:   user.PlayerID,
 		user: user,
 		game: g,
 		conn: conn,

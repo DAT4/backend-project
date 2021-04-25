@@ -14,7 +14,6 @@ func init() {
 type Game struct {
 	state      GameState
 	Db         dao.DBase
-	counter    int
 	clients    map[*Client]byte
 	broadcast  chan []byte
 	register   chan *Client
