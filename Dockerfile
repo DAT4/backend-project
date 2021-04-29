@@ -8,5 +8,5 @@ WORKDIR /api
 
 RUN go build -o backend
 
-CMD [ "/api/backend" ]
+CMD [ "/api/backend", "-db", "mongodb://mongo", "-addr", ":80" ]
 
