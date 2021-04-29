@@ -12,24 +12,26 @@ import (
 )
 
 type MongoDB struct {
-	uri string
+	Uri string
 }
 
-type findOneQuery struct {
+type _query struct {
 	model      interface{}
 	filter     bson.M
 	options    *options.FindOneOptions
 	collection string
 }
 
-type addOneQuery struct {
+type query struct {
 	model      interface{}
+	db         *MongoDB
 	filter     bson.M
 	collection string
 }
 
-func connect(col string) (*mongo.Collection, *mongo.Client, error) {
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+func (m *MongoDB) connect(col string) (*mongo.Collection, *mongo.Client, error) {
+	fmt.Println(m.Uri)
+	opt := options.Client().ApplyURI(m.Uri)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		return nil, nil, err
@@ -43,58 +45,59 @@ func connect(col string) (*mongo.Collection, *mongo.Client, error) {
 	return collection, client, nil
 }
 
-func (query *findOneQuery) find() error {
-	col, cli, err := connect(query.collection)
+func (q *query) findOne(o *options.FindOneOptions) error {
+	if o == nil {
+		o = options.FindOne()
+	}
+	col, cli, err := q.db.connect(q.collection)
 	if err != nil {
 		return err
 	}
 	defer cli.Disconnect(context.Background())
-	if query.options == nil {
-		err = col.FindOne(context.Background(), query.filter, options.FindOne()).Decode(query.model)
-	} else {
-		err = col.FindOne(context.Background(), query.filter, query.options).Decode(query.model)
-	}
+	err = col.FindOne(context.Background(), q.filter, o).Decode(q.model)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (query *addOneQuery) add() error {
-	col, cli, err := connect(query.collection)
+func (q *query) addOne() error {
+	col, cli, err := q.db.connect(q.collection)
 	defer cli.Disconnect(context.Background())
 	if err != nil {
 		return err
 	}
-	_, err = col.InsertOne(context.Background(), query.model)
+	_, err = col.InsertOne(context.Background(), q.model)
 	return err
 }
 
 func (m *MongoDB) Create(u *models.User) (err error) {
-	q2 := addOneQuery{
+	q2 := query{
 		model:      &u,
 		filter:     nil,
 		collection: "users",
 	}
-	return q2.add()
+	return q2.addOne()
 }
 func (m *MongoDB) UserFromId(id string) (user models.User, err error) {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
 	}
-	q := findOneQuery{
+	q := query{
+		db:         m,
 		model:      &user,
 		filter:     bson.M{"_id": _id},
 		collection: "users",
 	}
-	err = q.find()
+	err = q.findOne(nil)
 	fmt.Println(user)
 	return
 }
 func (m *MongoDB) Authenticate(u *models.User) error {
 	var tmpUser models.User
-	q := findOneQuery{
+	q := query{
+		db:    m,
 		model: &tmpUser,
 		filter: bson.M{
 			"username": u.Username,
@@ -102,7 +105,7 @@ func (m *MongoDB) Authenticate(u *models.User) error {
 		collection: "users",
 	}
 
-	err := q.find()
+	err := q.findOne(nil)
 	if err != nil {
 		return err
 	}
@@ -119,13 +122,13 @@ func (m *MongoDB) Authenticate(u *models.User) error {
 }
 func (m *MongoDB) UsernameTaken(u *models.User) (err error) {
 	var tmpUser models.User
-	q1 := findOneQuery{
+	q1 := query{
+		db:         m,
 		model:      &tmpUser,
 		filter:     bson.M{"username": u.Username},
-		options:    options.FindOne(),
 		collection: "users",
 	}
-	err = q1.find()
+	err = q1.findOne(nil)
 	if err == nil {
 		return errors.New("A user already exists with this name")
 	}

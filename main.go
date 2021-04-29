@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/DAT4/backend-project/api"
 	"github.com/DAT4/backend-project/dao"
@@ -12,15 +13,23 @@ import (
 )
 
 func main() {
-	db := &dao.MongoDB{}
-	go middle.G.Run(db)
-	startREST(db)
+	var (
+		addr string
+		db   string
+	)
+	flag.StringVar(&addr, "addr", ":8080", "The address and port to host on.")
+	flag.StringVar(&db, "db", "mongodb://localhost:27017", "The uri for the mongodb used.")
+	flag.Parse()
+	startREST(db, addr)
 }
 
-func startREST(db dao.DBase) {
+func startREST(dbURI, addr string) {
+	fmt.Println(dbURI)
+	db := &dao.MongoDB{Uri: dbURI}
+	go middle.G.Run(db)
 	r := mux.NewRouter()
 	api.AddEndpoints(r, db)
 	handler := cors.Default().Handler(r)
-	fmt.Println("Running on port 1001")
-	log.Fatal(http.ListenAndServe(":1001", handler))
+	fmt.Printf("Running on port %v\n", addr)
+	log.Fatal(http.ListenAndServe(addr, handler))
 }

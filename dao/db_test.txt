@@ -1,0 +1,112 @@
+package dao
+
+
+import (
+	"fmt"
+	"github.com/DAT4/backend-project/models"
+	"github.com/ory/dockertest/v3"
+	"log"
+	"testing"
+	"time"
+)
+
+ * THESE TEST FUNCTIONS REQUIRES DOCKER SETUP
+ * WITH A COMMON NETWORK AND A MONGODB DOCKER
+ * CONTAINER CALLED "testmongo"
+
+func startMongo(input func() error){
+	pool , err := dockertest.NewPool("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	resource, err := pool.Run("mongo", "3.0", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	if err := pool.Retry(func() error {
+		var err error
+		err = input()
+		if err != nil {
+			return err
+		}
+		time.Sleep(100 * time.Millisecond)
+		return nil
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+
+	// When you're done, kill and remove the container
+	if err = pool.Purge(resource); err != nil {
+		log.Fatalf("Could not purge resource: %s", err)
+	}
+}
+
+func TestMongoDB_Create(t *testing.T) {
+	t.Run("test create user in mongoDB", func(t *testing.T) {
+		startMongo(func() error {
+			db := MongoDB{Uri: "mongo://localhost:27017"}
+			user := models.User{
+				PlayerID: 0,
+				Username: "martin",
+				Password: "T3stpass!",
+				Email:    "mail@mama.sh",
+			}
+			err := db.Create(&user)
+			fmt.Println(user)
+			return err
+		})
+	})
+}
+
+func TestMongoDB_Authenticate(t *testing.T) {
+	startMongo(func() error {
+		db := MongoDB{Uri: "mongo://localhost:27017"}
+		user := models.User{
+			PlayerID: 0,
+			Username: "martin",
+			Password: "T3stpass!",
+			Email:    "mail@mama.sh",
+		}
+		err := db.Create(&user)
+		if err != nil {
+			t.Error(err)
+		}
+		t.Run("Test authenticate user", func(t *testing.T) {
+			err := db.Authenticate(&user)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+		return nil
+	})
+}
+
+func TestMongoDB_UserFromId(t *testing.T) {
+	startMongo(func() error {
+		db := MongoDB{Uri: "mongo://localhost:27017"}
+		user := models.User{
+			PlayerID: 0,
+			Username: "martin",
+			Password: "T3stpass!",
+			Email:    "mail@mama.sh",
+		}
+		err := db.Create(&user)
+		if err != nil {
+			t.Error(err)
+		}
+		t.Run("Test authenticate user", func(t *testing.T) {
+			err := db.Authenticate(&user)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+		return nil
+	})
+}
+
+func TestMongoDB_UsernameTaken(t *testing.T) {
+
+}
+*/

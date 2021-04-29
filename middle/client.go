@@ -5,6 +5,7 @@
 package middle
 
 import (
+	"fmt"
 	"github.com/DAT4/backend-project/models"
 	"log"
 	"strings"
@@ -14,7 +15,7 @@ import (
 )
 
 type Client struct {
-	Id   int
+	Id   byte
 	user *models.User
 	game *Game
 	conn *websocket.Conn
@@ -22,19 +23,24 @@ type Client struct {
 }
 
 func NewClient(g *Game, conn *websocket.Conn) {
+	fmt.Println("hej")
 	user, err := authenticateClient(conn, g)
+	fmt.Println("hej")
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
 	c := &Client{
-		Id:   user.PlayerID,
+		Id:   byte(user.PlayerID),
 		user: user,
 		game: g,
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
+	fmt.Println("hej_")
 	c.game.register <- c
+	fmt.Println("_hej")
 
 	err = c.sendStartCommand(g)
 	if err != nil {
@@ -48,18 +54,20 @@ func NewClient(g *Game, conn *websocket.Conn) {
 func (c *Client) sendStartCommand(g *Game) error {
 	msg := message{
 		command:  CREATE,
-		playerId: byte(c.Id),
+		playerId: c.Id,
 		x:        1,
 		y:        1,
 	}
 
-	players := make([]byte, 0, len(g.clients))
+	/*
+		players := make([]byte, 0, len(g.clients))
 
-	for _, id := range g.clients {
-		players = append(players, id)
-	}
+		for _, id := range g.clients {
+			players = append(players, id)
+		}
+	*/
 
-	return c.conn.WriteMessage(websocket.BinaryMessage, msg.sendWithContent(players))
+	return c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
 }
 
 func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) {
@@ -68,8 +76,8 @@ func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) 
 		if err != nil {
 			return nil, err
 		}
-		if message[3] == 0 {
-			token, err := getToken(string(message[3:]))
+		if message[ACT] == READY {
+			token, err := getToken(string(message[ACT:]))
 			if err != nil {
 				return nil, err
 			}
@@ -109,17 +117,59 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		if message[3] == 0 {
-			u, err := UserFromToken(string(message[3:]), c.game.Db)
+		switch message[ACT] {
+		case READY:
+			u, err := UserFromToken(string(message[ACT:]), c.game.Db)
 			if err != nil {
 				return
 			}
 			c.user = &u
 			continue
+		case MOVE:
+			if c.game.onTheRoad(message) {
+				c.game.broadcast <- message //----[id][x][y][command][message/string]
+			}
+
+		default:
+			fmt.Println("ERROR:", message)
 		}
-		c.game.broadcast <- message //[id][x][y]//[command][message/string]
 	}
 
+}
+
+const (
+	ID = iota
+	X
+	Y
+	ACT
+	DIRECTION
+)
+
+func (g *Game) onTheRoad(msg []byte) (ok bool) {
+	r := g.Map[1]
+	var pos int
+	x, y := int(msg[X]), int(msg[Y])
+	switch msg[DIRECTION] {
+	case LEFT:
+		if x > 0 {
+			pos = x - 1 + y*30
+		}
+	case RIGHT:
+		if x < 29 {
+			pos = x + 1 + y*30
+		}
+	case UP:
+		if y > 0 {
+			pos = x + (y-1)*30
+		}
+	case DOWN:
+		if y < 29 {
+			pos = x + (y+1)*30
+		}
+	default:
+		return false
+	}
+	return 0 != r[pos]
 }
 
 func (c *Client) writePump() {

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ProjectPlainTextFileTypeManager">
+    <file url="file://$PROJECT_DIR$/dao/db_test.txt" />
+  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Pipenv (Backend) (2)" project-jdk-type="Python SDK" />
 </project>
