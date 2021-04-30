@@ -15,13 +15,6 @@ type MongoDB struct {
 	Uri string
 }
 
-type _query struct {
-	model      interface{}
-	filter     bson.M
-	options    *options.FindOneOptions
-	collection string
-}
-
 type query struct {
 	model      interface{}
 	db         *MongoDB
@@ -73,6 +66,7 @@ func (q *query) addOne() error {
 
 func (m *MongoDB) Create(u *models.User) (err error) {
 	q2 := query{
+		db:         m,
 		model:      &u,
 		filter:     nil,
 		collection: "users",
