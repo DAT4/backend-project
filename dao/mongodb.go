@@ -54,14 +54,21 @@ func (q *query) findOne(o *options.FindOneOptions) error {
 	return nil
 }
 
-func (q *query) addOne() error {
+func (q *query) addOne() (id primitive.ObjectID, err error) {
 	col, cli, err := q.db.connect(q.collection)
-	defer cli.Disconnect(context.Background())
 	if err != nil {
-		return err
+		return
 	}
-	_, err = col.InsertOne(context.Background(), q.model)
-	return err
+	defer cli.Disconnect(context.Background())
+	x, err := col.InsertOne(context.Background(), q.model)
+	if err != nil {
+		return
+	}
+	id, ok := x.InsertedID.(primitive.ObjectID)
+	if ok {
+		return
+	}
+	return id, errors.New("mongo id could not compile to primitive")
 }
 
 func (m *MongoDB) Create(u *models.User) (err error) {
@@ -71,7 +78,22 @@ func (m *MongoDB) Create(u *models.User) (err error) {
 		filter:     nil,
 		collection: "users",
 	}
-	return q2.addOne()
+	id, err := q2.addOne()
+	if err != nil {
+		return err
+	}
+	col, cli, err := m.connect("users")
+	if err != nil {
+		return err
+	}
+	defer cli.Disconnect(context.Background())
+	newId, err := m.getNextSequence("users")
+	if err != nil {
+		return
+	}
+	x := col.FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{"playerid": newId.Seq}})
+	err = x.Decode(u)
+	return
 }
 func (m *MongoDB) UserFromId(id string) (user models.User, err error) {
 	_id, err := primitive.ObjectIDFromHex(id)
@@ -127,4 +149,21 @@ func (m *MongoDB) UsernameTaken(u *models.User) (err error) {
 		return errors.New("A user already exists with this name")
 	}
 	return nil
+}
+
+type counter struct {
+	Id  string `bson:"_id"`
+	Seq int    `bson:"seq"`
+}
+
+func (m *MongoDB) getNextSequence(name string) (out counter, err error) {
+	q := bson.M{"_id": name}
+	u := bson.M{"$inc": bson.M{"seq": 1}}
+	col, cli, err := m.connect("counters")
+	if err != nil {
+		return
+	}
+	defer cli.Disconnect(context.Background())
+	err = col.FindOneAndUpdate(context.Background(), q, u).Decode(&out)
+	return
 }

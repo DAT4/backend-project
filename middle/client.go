@@ -23,9 +23,7 @@ type Client struct {
 }
 
 func NewClient(g *Game, conn *websocket.Conn) {
-	fmt.Println("hej")
 	user, err := authenticateClient(conn, g)
-	fmt.Println("hej")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -38,9 +36,7 @@ func NewClient(g *Game, conn *websocket.Conn) {
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
-	fmt.Println("hej_")
 	c.game.register <- c
-	fmt.Println("_hej")
 
 	err = c.sendStartCommand(g)
 	if err != nil {
@@ -58,15 +54,6 @@ func (c *Client) sendStartCommand(g *Game) error {
 		x:        1,
 		y:        1,
 	}
-
-	/*
-		players := make([]byte, 0, len(g.clients))
-
-		for _, id := range g.clients {
-			players = append(players, id)
-		}
-	*/
-
 	return c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
 }
 
