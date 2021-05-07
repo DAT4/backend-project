@@ -25,10 +25,14 @@ func main() {
 
 func startREST(dbURI, addr string) {
 	fmt.Println(dbURI)
-	db := &dao.MongoDB{Uri: dbURI}
-	go middle.G.Run(db)
+	db, err := dao.NewMongoDB(dbURI)
+	if err != nil {
+		log.Fatalf("Could not create the database: %v", err)
+	}
+
+	go middle.G.Run(&db)
 	r := mux.NewRouter()
-	api.AddEndpoints(r, db)
+	api.AddEndpoints(r, &db)
 	handler := cors.Default().Handler(r)
 	fmt.Printf("Running on port %v\n", addr)
 	log.Fatal(http.ListenAndServe(addr, handler))

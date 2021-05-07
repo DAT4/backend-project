@@ -16,11 +16,19 @@ func tokenHandler(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 		return
 	}
 
-	err = base.Authenticate(&u)
+	tmpUser, err := base.UserFromName(string(u.Username))
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return
 	}
+
+	ok := u.Check(tmpUser.Password)
+	if !ok {
+		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
+	}
+	u.Id = tmpUser.Id
+	u.PlayerID = tmpUser.PlayerID
+	u.Password = tmpUser.Password
 
 	tokenString, err := middle.MakeToken(u)
 	if err != nil {
@@ -47,7 +55,7 @@ func refreshToken(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 		handleHttpError(w, "UserFromToken", err, http.StatusUnauthorized)
 	}
 
-	err = base.Authenticate(&u)
+	_, err = base.UserFromName(string(u.Username))
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return

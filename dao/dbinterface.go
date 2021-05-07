@@ -8,5 +8,5 @@ type DBase interface {
 	Create(u *models.User) (err error)
 	UserFromId(id string) (user models.User, err error)
 	UsernameTaken(u *models.User) (err error)
-	Authenticate(u *models.User) (err error)
+	UserFromName(name string) (user models.User, err error)
 }

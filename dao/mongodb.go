@@ -22,8 +22,26 @@ type query struct {
 	collection string
 }
 
+func NewMongoDB(uri string) (db MongoDB, err error) {
+	db = MongoDB{uri}
+	err = db.startUserCounter()
+	return
+}
+
+func (m *MongoDB) startUserCounter() error {
+	col, cli, err := m.connect("counters")
+	if err != nil {
+		return err
+	}
+	defer cli.Disconnect(context.Background())
+	err = col.FindOne(context.Background(), bson.M{"_id": "users"}).Decode(&counter{})
+	if err != nil {
+		_, err = col.InsertOne(context.Background(), bson.M{"_id": "users", "seq": 0})
+	}
+	return err
+}
+
 func (m *MongoDB) connect(col string) (*mongo.Collection, *mongo.Client, error) {
-	fmt.Println(m.Uri)
 	opt := options.Client().ApplyURI(m.Uri)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
@@ -92,6 +110,7 @@ func (m *MongoDB) Create(u *models.User) (err error) {
 		return
 	}
 	x := col.FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{"playerid": newId.Seq}})
+	fmt.Println("HEEEEEEEj")
 	err = x.Decode(u)
 	return
 }
@@ -110,31 +129,19 @@ func (m *MongoDB) UserFromId(id string) (user models.User, err error) {
 	fmt.Println(user)
 	return
 }
-func (m *MongoDB) Authenticate(u *models.User) error {
-	var tmpUser models.User
+func (m *MongoDB) UserFromName(name string) (user models.User, err error) {
 	q := query{
 		db:    m,
-		model: &tmpUser,
+		model: &user,
 		filter: bson.M{
-			"username": u.Username,
+			"username": name,
 		},
 		collection: "users",
 	}
 
-	err := q.findOne(nil)
-	if err != nil {
-		return err
-	}
+	err = q.findOne(nil)
+	return
 
-	//TODO This logic should be in the middle package
-	ok := u.Check(tmpUser.Password)
-	if !ok {
-		return errors.New("password incorrect")
-	}
-	u.Id = tmpUser.Id
-	u.PlayerID = tmpUser.PlayerID
-	u.Password = tmpUser.Password
-	return nil
 }
 func (m *MongoDB) UsernameTaken(u *models.User) (err error) {
 	var tmpUser models.User
