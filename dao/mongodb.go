@@ -89,20 +89,20 @@ func (q *query) addOne() (id primitive.ObjectID, err error) {
 	return id, errors.New("mongo id could not compile to primitive")
 }
 
-func (m *MongoDB) Create(u *models.User) (err error) {
+func (m *MongoDB) Create(userIn models.User) (userOut models.User, err error) {
 	q2 := query{
 		db:         m,
-		model:      &u,
+		model:      &userIn,
 		filter:     nil,
 		collection: "users",
 	}
 	id, err := q2.addOne()
 	if err != nil {
-		return err
+		return
 	}
 	col, cli, err := m.connect("users")
 	if err != nil {
-		return err
+		return
 	}
 	defer cli.Disconnect(context.Background())
 	newId, err := m.getNextSequence("users")
@@ -110,8 +110,7 @@ func (m *MongoDB) Create(u *models.User) (err error) {
 		return
 	}
 	x := col.FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{"playerid": newId.Seq}})
-	fmt.Println("HEEEEEEEj")
-	err = x.Decode(u)
+	err = x.Decode(&userOut)
 	return
 }
 func (m *MongoDB) UserFromId(id string) (user models.User, err error) {

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,22 +21,11 @@ type User struct {
 	Ips      []Ip               `json:"-"`
 }
 
-func (user *User) HashAndSalt() error {
-	bytePwd := []byte(user.Password)
-	hash, err := bcrypt.GenerateFromPassword(bytePwd, bcrypt.MinCost)
-	if err != nil {
-		return err
-	}
-	user.Password = Password(hash)
-	return nil
-}
-
 func (user *User) Check(hashedPassword Password) bool {
 	bytePwd := []byte(user.Password)
 	byteHash := []byte(hashedPassword)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	return true

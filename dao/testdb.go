@@ -10,10 +10,10 @@ type TestDB struct {
 	users []models.User
 }
 
-func (t *TestDB) Create(u *models.User) (err error) {
-	u.Id = primitive.NewObjectID()
-	t.users = append(t.users, *u)
-	return nil
+func (t *TestDB) Create(userIn models.User) (userOut models.User, err error) {
+	userIn.Id = primitive.NewObjectID()
+	t.users = append(t.users, userIn)
+	return userIn, nil
 }
 func (t *TestDB) UserFromId(id string) (user models.User, err error) {
 	for _, u := range t.users {
@@ -31,16 +31,17 @@ func (t *TestDB) UsernameTaken(u *models.User) (err error) {
 	}
 	return nil
 }
-func (t *TestDB) Authenticate(u *models.User) (err error) {
+func (t *TestDB) UserFromName(name string) (user models.User, err error) {
 	for _, dbu := range t.users {
-		if dbu.Username == u.Username {
-			if dbu.Password == u.Password {
-				u.PlayerID = dbu.PlayerID
-				u.Id = dbu.Id
-				return nil
-			}
-			return errors.New("wrong password")
+		if dbu.Username == models.Username(name) {
+			return dbu, nil
 		}
 	}
-	return errors.New("user not found")
+	err = errors.New("user not found")
+	return
+}
+
+func NewTestDB() *TestDB {
+	return &TestDB{}
+
 }

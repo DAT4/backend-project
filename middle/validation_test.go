@@ -200,36 +200,12 @@ func TestUserValidation(t *testing.T) {
 		},
 	}
 
-	db := CreateTestDB()
+	db := dao.NewTestDB()
 
 	for _, test := range tests {
-		err := Validate(test.input, &db)
+		err := validate(test.input, db)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}
 	}
-}
-
-func CreateTestDB() dao.TestDB {
-	db := dao.TestDB{}
-	users := []models.User{
-		{
-			Id:       primitive.NewObjectID(),
-			PlayerID: 0,
-			Username: "martin",
-			Password: "T3stpass!",
-			Email:    "mail@mama.sh",
-		},
-		{
-			Id:       primitive.NewObjectID(),
-			PlayerID: 0,
-			Username: "simon",
-			Password: "hej",
-			Email:    "simon@gmail.dk",
-		},
-	}
-	for _, user := range users {
-		_ = db.Create(&user)
-	}
-	return db
 }

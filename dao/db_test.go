@@ -80,7 +80,7 @@ func TestMongoDB_Create(t *testing.T) {
 			Password: "T3stpass!",
 			Email:    "mail@mama.sh",
 		}
-		err := db.Create(&user)
+		user, err := db.Create(user)
 		assert.NoError(t, err)
 		fmt.Println("Create User OK")
 	})
@@ -93,7 +93,7 @@ func TestMongoDB_UserFromName(t *testing.T) {
 		Password: "T3stpass!",
 		Email:    "mail@mama.sh",
 	}
-	err := db.Create(&user)
+	user, err := db.Create(user)
 	assert.NoError(t, err)
 	t.Run("Test authenticate user", func(t *testing.T) {
 		_, err := db.UserFromName(string(user.Username))

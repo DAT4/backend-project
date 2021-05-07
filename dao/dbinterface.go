@@ -5,7 +5,7 @@ import (
 )
 
 type DBase interface {
-	Create(u *models.User) (err error)
+	Create(userIn models.User) (userOut models.User, err error)
 	UserFromId(id string) (user models.User, err error)
 	UsernameTaken(u *models.User) (err error)
 	UserFromName(name string) (user models.User, err error)

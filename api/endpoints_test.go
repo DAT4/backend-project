@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/DAT4/backend-project/dao"
-	"github.com/DAT4/backend-project/middle"
-	"github.com/DAT4/backend-project/models"
-	"github.com/gorilla/websocket"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/DAT4/backend-project/dao"
+	"github.com/DAT4/backend-project/middle"
+	"github.com/DAT4/backend-project/models"
 )
 
 type TestUser struct {
@@ -33,7 +35,8 @@ func TestTokenHandler(t *testing.T) {
 		},
 	}
 
-	testDb := CreateTestDB(users)
+	testDb := dao.NewTestDB()
+	middle.AddUsersToTestDb(users, testDb)
 
 	//TODO look for dependency injection (timeout on jwt)
 	var testDataList = []TestUser{
@@ -55,8 +58,9 @@ func TestTokenHandler(t *testing.T) {
 		}
 	})
 }
+
 func TestCreateUser(t *testing.T) {
-	testDb := CreateTestDB([]models.User{})
+	testDb := dao.NewTestDB()
 	t.Run("Testing creating a user", func(t *testing.T) {
 
 		newUser := models.User{
@@ -79,13 +83,17 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	testDb := CreateTestDB([]models.User{
+	testDb := dao.NewTestDB()
+
+	users := []models.User{
 		{
 			Username: "martin",
 			Password: "T3stpass!",
 			Email:    "mail@mama.sh",
 		},
-	})
+	}
+
+	middle.AddUsersToTestDb(users, testDb)
 
 	t.Run("Testing creating a user", func(t *testing.T) {
 		ok, tokens := assertLogin(models.User{Username: "martin", Password: "T3stpass!"}, testDb)
@@ -120,6 +128,7 @@ func assertLogin(user models.User, db dao.DBase) (ok bool, token map[string]stri
 
 func TestJoinWebsocketConnection(t *testing.T) {
 
+	testDb := dao.NewTestDB()
 	id := primitive.NewObjectID()
 
 	users := []models.User{
@@ -132,7 +141,7 @@ func TestJoinWebsocketConnection(t *testing.T) {
 		},
 	}
 
-	testDb := CreateTestDB(users)
+	middle.AddUsersToTestDb(users, testDb)
 
 	go middle.G.Run(testDb)
 
@@ -170,12 +179,4 @@ func TestJoinWebsocketConnection(t *testing.T) {
 			t.Errorf("Expected %v got %v", expected, got)
 		}
 	})
-}
-
-func CreateTestDB(users []models.User) *dao.TestDB {
-	db := &dao.TestDB{}
-	for _, user := range users {
-		_ = db.Create(&user)
-	}
-	return db
 }

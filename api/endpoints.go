@@ -9,7 +9,6 @@ import (
 )
 
 func byLazy(fn func(w http.ResponseWriter, r *http.Request, base dao.DBase), db dao.DBase) http.HandlerFunc {
-	//Lazy evaluation
 	return func(w http.ResponseWriter, r *http.Request) {
 		fn(w, r, db)
 	}

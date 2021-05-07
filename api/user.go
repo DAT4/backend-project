@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"net/http"
@@ -8,26 +9,23 @@ import (
 
 func createUser(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 	w.Header().Add("Content-Type", "application/json")
+
 	u, err := middle.UserFromJson(r.Body)
 	if err != nil {
 		handleHttpError(w, "UserFromJson", err, http.StatusNotAcceptable)
 		return
 	}
-	err = middle.Validate(u, base)
+
+	u, err = middle.CreateUser(u, base)
 	if err != nil {
 		handleHttpError(w, "ValidateUser", err, http.StatusNotAcceptable)
 		return
 	}
-	err = u.HashAndSalt()
-	if err != nil {
-		handleHttpError(w, "HashAndSalt", err, http.StatusTeapot)
-		return
-	}
-	err = base.Create(&u)
-	if err != nil {
-		handleHttpError(w, "CreateUser", err, http.StatusTeapot)
-		return
-	}
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("OK"))
+	err = json.NewEncoder(w).Encode(u)
+	if err != nil {
+		handleHttpError(w, "Serializing json", err, http.StatusInternalServerError)
+		return
+	}
 }
