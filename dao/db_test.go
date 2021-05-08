@@ -22,7 +22,7 @@ var (
 )
 
 var (
-	port = "1237"
+	port = "27017"
 )
 
 func TestMain(m *testing.M) {
@@ -31,14 +31,16 @@ func TestMain(m *testing.M) {
 		log.Fatal("could not connect to docker:", err)
 	}
 	opts := dockertest.RunOptions{
+		Hostname:     "dockertest",
+		Name:         "dockertest",
 		Repository:   "mongo",
-		Tag:          "latest",
 		ExposedPorts: []string{"27017"},
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			"27017": {{HostIP: "0.0.0.0", HostPort: port}},
 		},
 	}
 
+	fmt.Println("Creating resource")
 	resource, err := pool.RunWithOptions(&opts, func(config *docker.HostConfig) {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{
@@ -54,6 +56,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err = pool.Retry(func() error {
+		fmt.Println("Trying")
 		uri := fmt.Sprintf("mongo://localhost:%v", port)
 		db, err = NewMongoDB(uri)
 		return err

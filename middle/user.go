@@ -113,6 +113,24 @@ func validateEmail(email models.Email) error {
 	return nil
 }
 
+func AuthenticateUser(u models.User, base dao.DBase) (token map[string]string, err error) {
+	tmpUser, err := base.UserFromName(string(u.Username))
+	if err != nil {
+		return
+	}
+
+	ok := check(u.Password, tmpUser.Password)
+	if !ok {
+		return nil, errors.New("wrong password")
+	}
+	u.Id = tmpUser.Id
+	u.PlayerID = tmpUser.PlayerID
+	u.Password = tmpUser.Password
+
+	return MakeToken(u)
+
+}
+
 func validateMac(mac models.Mac) error {
 	re, _ := regexp.Compile(`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`)
 	ok := re.MatchString(string(mac))
@@ -129,4 +147,14 @@ func validateIp(ip models.Ip) error {
 		return errors.New("ip address is invalid")
 	}
 	return nil
+}
+
+func check(password models.Password, hashedPassword models.Password) bool {
+	bytePwd := []byte(password)
+	byteHash := []byte(hashedPassword)
+	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
+	if err != nil {
+		return false
+	}
+	return true
 }

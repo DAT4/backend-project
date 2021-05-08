@@ -133,30 +133,12 @@ const (
 )
 
 func (g *Game) onTheRoad(msg []byte) (ok bool) {
-	r := g.Map[1]
-	var pos int
 	x, y := int(msg[X]), int(msg[Y])
-	switch msg[DIRECTION] {
-	case LEFT:
-		if x > 0 {
-			pos = x - 1 + y*30
-		}
-	case RIGHT:
-		if x < 29 {
-			pos = x + 1 + y*30
-		}
-	case UP:
-		if y > 0 {
-			pos = x + (y-1)*30
-		}
-	case DOWN:
-		if y < 29 {
-			pos = x + (y+1)*30
-		}
-	default:
+	if x > -1 && x < 30 && y > -1 && y < 30 {
+		return 0 != g.Map[1][x+y*30]
+	} else {
 		return false
 	}
-	return 0 != r[pos]
 }
 
 func (c *Client) writePump() {

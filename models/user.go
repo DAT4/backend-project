@@ -2,7 +2,6 @@ package models
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Username string
@@ -19,14 +18,4 @@ type User struct {
 	Email    Email              `json:"email"`
 	Macs     []Mac              `json:"-"`
 	Ips      []Ip               `json:"-"`
-}
-
-func (user *User) Check(hashedPassword Password) bool {
-	bytePwd := []byte(user.Password)
-	byteHash := []byte(hashedPassword)
-	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)
-	if err != nil {
-		return false
-	}
-	return true
 }
