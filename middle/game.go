@@ -52,7 +52,6 @@ func (g *Game) Run(db dao.DBase) {
 		select {
 		case client := <-g.register:
 			g.clients[client] = client.Id
-			fmt.Println("heeeej")
 			msg := message{
 				playerId: client.Id,
 				x:        1,
