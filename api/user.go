@@ -15,7 +15,7 @@ func (a *API) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err = middle.CreateUser(u, a.Db)
+	u, err = middle.CreateUser(u, a.Game.Db)
 	if err != nil {
 		handleHttpError(w, "ValidateUser", err, http.StatusNotAcceptable)
 		return

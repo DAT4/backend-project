@@ -28,18 +28,17 @@ func main() {
 	}
 
 	server := api.API{
-		Db:   db,
-		Game: middle.NewGame(),
+		Game: middle.NewGame(db),
 	}
 
-	go server.Game.Run(server.Db)
+	go server.Game.Run()
 
 	router := mux.NewRouter()
 
 	router.Path("/register").Methods(http.MethodPost).HandlerFunc(server.CreateUser)
 	router.Path("/login").Methods(http.MethodPost).HandlerFunc(server.TokenHandler)
 	router.Path("/refresh").Methods(http.MethodPost).HandlerFunc(server.RefreshToken)
-	router.Path("/join").Methods(http.MethodPost).HandlerFunc(server.JoinWebsocketConnection)
+	router.Path("/join").Methods(http.MethodGet).HandlerFunc(server.JoinWebsocketConnection)
 
 	handler := cors.Default().Handler(router)
 

@@ -2,13 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"net/http"
 )
 
 type API struct {
-	Db   dao.DBase
 	Game *middle.Game
 }
 
@@ -21,7 +19,7 @@ func (a *API) TokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenPair, err := middle.AuthenticateUser(u, a.Db)
+	tokenPair, err := middle.AuthenticateUser(u, a.Game.Db)
 	if err != nil {
 		handleHttpError(w, "Authenticate user", err, http.StatusUnauthorized)
 	}
@@ -40,12 +38,12 @@ func (a *API) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	u, err := middle.UserFromToken(token, a.Db)
+	u, err := middle.UserFromToken(token, a.Game.Db)
 	if err != nil {
 		handleHttpError(w, "UserFromToken", err, http.StatusUnauthorized)
 	}
 
-	_, err = a.Db.UserFromName(string(u.Username))
+	_, err = a.Game.Db.UserFromName(string(u.Username))
 	if err != nil {
 		handleHttpError(w, "AuthenticateUser", err, http.StatusUnauthorized)
 		return

@@ -30,8 +30,9 @@ func getMap() [][]int {
 	}
 }
 
-func NewGame() *Game {
+func NewGame(db dao.DBase) *Game {
 	return &Game{
+		Db:         db,
 		clients:    make(map[*Client]byte),
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
@@ -40,8 +41,7 @@ func NewGame() *Game {
 	}
 }
 
-func (g *Game) Run(db dao.DBase) {
-	g.Db = db
+func (g *Game) Run() {
 	for {
 		select {
 		case client := <-g.register:

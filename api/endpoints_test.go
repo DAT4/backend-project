@@ -37,7 +37,7 @@ func TestTokenHandler(t *testing.T) {
 
 	testDb := dao.NewTestDB()
 	server := API{
-		Db: testDb,
+		Game: middle.NewGame(testDb),
 	}
 	middle.AddUsersToTestDb(users, testDb)
 
@@ -63,7 +63,7 @@ func TestTokenHandler(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	server := API{Db: dao.NewTestDB()}
+	server := API{middle.NewGame(dao.NewTestDB())}
 	t.Run("Testing creating a user", func(t *testing.T) {
 
 		newUser := models.User{
@@ -87,7 +87,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestRefreshToken(t *testing.T) {
 	db := dao.NewTestDB()
-	server := API{Db: db}
+	server := API{middle.NewGame(db)}
 
 	users := []models.User{
 		{
@@ -148,11 +148,10 @@ func TestJoinWebsocketConnection(t *testing.T) {
 	middle.AddUsersToTestDb(users, testDb)
 
 	server := API{
-		Db:   testDb,
-		Game: middle.NewGame(),
+		Game: middle.NewGame(testDb),
 	}
 
-	go server.Game.Run(server.Db)
+	go server.Game.Run()
 
 	t.Run("Testing the websocket", func(t *testing.T) {
 
