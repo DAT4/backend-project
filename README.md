@@ -1,3 +1,8 @@
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dat4/backend-project/Go?style=flat-square)
+![Docker Automated build](https://img.shields.io/docker/automated/martinmaartensson/backend-project?style=flat-square)
+![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/martinmaartensson/backend-project)
+[![codecov](https://codecov.io/gh/DAT4/backend-project/branch/master/graph/badge.svg?token=9TBYXXU56K)](https://codecov.io/gh/DAT4/backend-project)
+
 # Implementation
 In this section we will go through each of the packages implemented in
 the system. Each package is illustrated with a UML diagram and then one
