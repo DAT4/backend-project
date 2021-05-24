@@ -3,7 +3,7 @@ package middle
 import (
 	"errors"
 	"fmt"
-	"github.com/DAT4/backend-project/models"
+	"github.com/DAT4/backend-project/dto"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/form3tech-oss/jwt-go"
 	"net/http"
@@ -11,18 +11,18 @@ import (
 	"time"
 )
 
-const appKey = "martin.mama.sh"
+const AppKey = "martin.mama.sh"
 
-func MakeToken(u models.User) (map[string]string, error) {
+func MakeToken(u dto.User) (tokens TokenPair, err error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": u.Id,
 		"exp":  time.Now().Add(time.Second * 15).Unix(),
 		"iat":  time.Now().Unix(),
 	})
 
-	t, err := token.SignedString([]byte(appKey))
+	tokens.AuthToken, err = token.SignedString([]byte(AppKey))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -31,38 +31,36 @@ func MakeToken(u models.User) (map[string]string, error) {
 		"iat":  time.Now().Unix(),
 	})
 
-	rt, err := token.SignedString([]byte(appKey))
-	if err != nil {
-		return nil, err
-	}
+	tokens.RefreshToken, err = token.SignedString([]byte(AppKey))
+	return
+}
 
-	return map[string]string{
-		"auth_token":    t,
-		"refresh_token": rt,
-	}, nil
+type TokenPair struct {
+	AuthToken    string `json:"auth_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 //https://medium.com/monstar-lab-bangladesh-engineering/jwt-auth-in-go-part-2-refresh-tokens-d334777ca8a0
-func RefreshToken(refreshToken string, u models.User) (map[string]string, error) {
+func RefreshToken(refreshToken string, u dto.User) (tokens TokenPair, err error) {
 	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(appKey), nil
+		return []byte(AppKey), nil
 	})
 	if err != nil {
-		return nil, err
+		return
 	}
 	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return MakeToken(u)
+		tokens, err = MakeToken(u)
 	}
-	return nil, err
+	return
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(appKey), nil
+			return []byte(AppKey), nil
 		},
 		SigningMethod: jwt.SigningMethodHS256,
 	})
@@ -72,7 +70,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func extractClaims(tokenString string) (id string, err error) {
 	claims := jwt.MapClaims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(appKey), nil
+		return []byte(AppKey), nil
 	})
 	if err != nil {
 		fmt.Println(err)

@@ -1,8 +1,7 @@
 package middle
 
 import (
-	"github.com/DAT4/backend-project/dao"
-	"github.com/DAT4/backend-project/models"
+	"github.com/DAT4/backend-project/dto"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 )
@@ -25,7 +24,7 @@ func got(err error) string {
 
 func TestPasswordValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.Password
+		input         dto.Password
 		expectedError bool
 	}{
 		{"", true},
@@ -44,7 +43,7 @@ func TestPasswordValidation(t *testing.T) {
 
 func TestUsernameValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.Username
+		input         dto.Username
 		expectedError bool
 	}{
 		{"", true},
@@ -64,7 +63,7 @@ func TestUsernameValidation(t *testing.T) {
 
 func TestEmailValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.Email
+		input         dto.Email
 		expectedError bool
 	}{
 		{"", true},
@@ -84,7 +83,7 @@ func TestEmailValidation(t *testing.T) {
 
 func TestIpValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.Ip
+		input         dto.Ip
 		expectedError bool
 	}{
 		{"", true},
@@ -118,7 +117,7 @@ func TestIpValidation(t *testing.T) {
 
 func TestMacValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.Mac
+		input         dto.Mac
 		expectedError bool
 	}{
 		{"", true},
@@ -151,22 +150,22 @@ func TestMacValidation(t *testing.T) {
 
 func TestUserValidation(t *testing.T) {
 	var tests = []struct {
-		input         models.User
+		input         dto.User
 		expectedError bool
 	}{
 		{
-			input: models.User{
-				Id:       primitive.ObjectID{},
+			input: dto.User{
+				Id:       primitive.NewObjectID().Hex(),
 				Username: "martini",
 				Password: "teSt123!#",
 				Email:    "s123123@studentdtu.dk",
-				Macs: []models.Mac{
+				Macs: []dto.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []models.Ip{
+				Ips: []dto.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",
@@ -177,18 +176,18 @@ func TestUserValidation(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			input: models.User{
-				Id:       primitive.ObjectID{},
+			input: dto.User{
+				Id:       primitive.NewObjectID().Hex(),
 				Username: "",
 				Password: "teSt123!#",
 				Email:    "s123123@studedtu.dk",
-				Macs: []models.Mac{
+				Macs: []dto.Mac{
 					"00:01:e6:57:8b:68",
 					"00:04:27:6a:5d:a1",
 					"00:30:c1:5e:58:7d",
 					"00:02:b3:bb:66:98",
 				},
-				Ips: []models.Ip{
+				Ips: []dto.Ip{
 					"192.168.0.105",
 					"192.168.0.153",
 					"192.168.0.191",
@@ -200,10 +199,8 @@ func TestUserValidation(t *testing.T) {
 		},
 	}
 
-	db := dao.NewTestDB()
-
 	for _, test := range tests {
-		err := validate(test.input, db)
+		err := validate(test.input)
 		if (err != nil) != test.expectedError {
 			t.Errorf("Expected %s got %s", exp(test.expectedError), got(err))
 		}

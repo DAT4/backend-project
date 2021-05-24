@@ -6,6 +6,7 @@ require (
 	github.com/auth0/go-jwt-middleware v1.0.0
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/rs/cors v1.7.0

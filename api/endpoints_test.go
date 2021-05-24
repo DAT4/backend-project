@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/DAT4/backend-project/dao"
+	"github.com/DAT4/backend-project/dto"
 	"github.com/DAT4/backend-project/middle"
-	"github.com/DAT4/backend-project/models"
 )
 
 type TestUser struct {
@@ -25,9 +25,9 @@ type TestUser struct {
 }
 
 func TestTokenHandler(t *testing.T) {
-	users := []models.User{
+	users := []dto.User{
 		{
-			Id:       primitive.NewObjectID(),
+			Id:       primitive.NewObjectID().Hex(),
 			PlayerID: 0,
 			Username: "martin",
 			Password: "T3stpass!",
@@ -66,7 +66,7 @@ func TestCreateUser(t *testing.T) {
 	server := API{middle.NewGame(dao.NewTestDB())}
 	t.Run("Testing creating a user", func(t *testing.T) {
 
-		newUser := models.User{
+		newUser := dto.User{
 			Username: "martin",
 			Password: "T3stpass!",
 			Email:    "mail@mama.sh",
@@ -76,7 +76,7 @@ func TestCreateUser(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewReader(body))
 		response := httptest.NewRecorder()
 
-		server.CreateUser(response, request)
+		server.InsertUser(response, request)
 
 		if response.Code != http.StatusCreated {
 			t.Errorf("Expected %v got %v", http.StatusCreated, response.Code)
@@ -89,7 +89,7 @@ func TestRefreshToken(t *testing.T) {
 	db := dao.NewTestDB()
 	server := API{middle.NewGame(db)}
 
-	users := []models.User{
+	users := []dto.User{
 		{
 			Username: "martin",
 			Password: "T3stpass!",
@@ -100,7 +100,7 @@ func TestRefreshToken(t *testing.T) {
 	middle.AddUsersToTestDb(users, db)
 
 	t.Run("Testing creating a user", func(t *testing.T) {
-		ok, tokens := assertLogin(models.User{Username: "martin", Password: "T3stpass!"}, server)
+		ok, tokens := assertLogin(dto.User{Username: "martin", Password: "T3stpass!"}, server)
 		if !ok {
 			t.Error("could not login")
 		}
@@ -116,7 +116,7 @@ func TestRefreshToken(t *testing.T) {
 	})
 }
 
-func assertLogin(user models.User, server API) (ok bool, token map[string]string) {
+func assertLogin(user dto.User, server API) (ok bool, token map[string]string) {
 	body, _ := json.Marshal(user)
 	request, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewReader(body))
 	response := httptest.NewRecorder()
@@ -133,9 +133,9 @@ func assertLogin(user models.User, server API) (ok bool, token map[string]string
 func TestJoinWebsocketConnection(t *testing.T) {
 
 	testDb := dao.NewTestDB()
-	id := primitive.NewObjectID()
+	id := primitive.NewObjectID().Hex()
 
-	users := []models.User{
+	users := []dto.User{
 		{
 			Id:       id,
 			PlayerID: 0,

@@ -2,12 +2,12 @@ package middle
 
 import (
 	"fmt"
-	"github.com/DAT4/backend-project/dao"
+	"github.com/DAT4/backend-project/dao/base"
 )
 
 type Game struct {
 	state      GameState
-	Db         dao.DBase
+	Users      base.DB
 	clients    map[*Client]byte
 	broadcast  chan []byte
 	register   chan *Client
@@ -30,9 +30,9 @@ func getMap() [][]int {
 	}
 }
 
-func NewGame(db dao.DBase) *Game {
+func NewGame(users base.DB) *Game {
 	return &Game{
-		Db:         db,
+		Users:      users,
 		clients:    make(map[*Client]byte),
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),

@@ -1,58 +1,49 @@
 package middle
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/DAT4/backend-project/dao"
-	"github.com/DAT4/backend-project/models"
+	"github.com/DAT4/backend-project/dao/base"
+	"github.com/DAT4/backend-project/dto"
 	"golang.org/x/crypto/bcrypt"
-	"io"
+	"net/http"
 	"regexp"
 	"unicode"
 )
 
-func UserFromJson(data io.ReadCloser) (user models.User, err error) {
-	err = json.NewDecoder(data).Decode(&user)
+func Validate(user dto.User) (err error) {
+	err = user.Password.Validate()
+	if err != nil {
+		return err
+	}
+	err = user.Username.Validate()
+	if err != nil {
+		return err
+	}
+	err = user.Email.Validate()
 	return
 }
 
-func UserFromToken(token string, db dao.DBase) (user models.User, err error) {
+func UserFromHeader(r *http.Request, dbase base.DB) (user dto.Object, err error) {
+	token, err := ExtractJWTToken(r, AUTHENTICATION)
+	if err != nil {
+		return
+	}
 	id, err := extractClaims(token)
 	if err != nil {
 		return
 	}
-	user, err = db.UserFromId(id)
-	return
-}
-func CreateUser(userIn models.User, db dao.DBase) (userOut models.User, err error) {
-	err = validate(userIn, db)
-	if err != nil {
-		return
-	}
-	userIn.Password, err = hashAndSalt(userIn.Password)
-	if err != nil {
-		return
-	}
-	userOut, err = db.Create(userIn)
-	return
+	return dbase.FindOne(id)
 }
 
-func hashAndSalt(password models.Password) (out models.Password, err error) {
-	bytePwd := []byte(password)
-	hash, err := bcrypt.GenerateFromPassword(bytePwd, bcrypt.MinCost)
+func UserFromToken(token string, dbase base.DB) (user dto.Object, err error) {
+	id, err := extractClaims(token)
 	if err != nil {
 		return
 	}
-	out = models.Password(hash)
-	return
+	return dbase.FindOne(id)
 }
-
-func validate(user models.User, db dao.DBase) error {
+func validate(user dto.User) error {
 	var err error
-	err = db.UsernameTaken(&user)
-	if err != nil {
-		return err
-	}
 	err = validatePassword(user.Password)
 	if err != nil {
 		return err
@@ -68,7 +59,7 @@ func validate(user models.User, db dao.DBase) error {
 	return nil
 }
 
-func validatePassword(password models.Password) error {
+func validatePassword(password dto.Password) error {
 	var upp, low, num, sym bool
 
 	for _, char := range password {
@@ -95,7 +86,7 @@ func validatePassword(password models.Password) error {
 	return nil
 }
 
-func validateUsername(username models.Username) error {
+func validateUsername(username dto.Username) error {
 	re, _ := regexp.Compile(`^[a-z]{4,20}$`)
 	ok := re.MatchString(string(username))
 	if !ok {
@@ -104,7 +95,7 @@ func validateUsername(username models.Username) error {
 	return nil
 }
 
-func validateEmail(email models.Email) error {
+func validateEmail(email dto.Email) error {
 	re, _ := regexp.Compile(`^\w+@\w+\.(\w|[.])+$`)
 	ok := re.MatchString(string(email))
 	if !ok {
@@ -113,25 +104,7 @@ func validateEmail(email models.Email) error {
 	return nil
 }
 
-func AuthenticateUser(u models.User, base dao.DBase) (token map[string]string, err error) {
-	tmpUser, err := base.UserFromName(string(u.Username))
-	if err != nil {
-		return
-	}
-
-	ok := check(u.Password, tmpUser.Password)
-	if !ok {
-		return nil, errors.New("wrong password")
-	}
-	u.Id = tmpUser.Id
-	u.PlayerID = tmpUser.PlayerID
-	u.Password = tmpUser.Password
-
-	return MakeToken(u)
-
-}
-
-func validateMac(mac models.Mac) error {
+func validateMac(mac dto.Mac) error {
 	re, _ := regexp.Compile(`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`)
 	ok := re.MatchString(string(mac))
 	if !ok {
@@ -140,7 +113,7 @@ func validateMac(mac models.Mac) error {
 	return nil
 }
 
-func validateIp(ip models.Ip) error {
+func validateIp(ip dto.Ip) error {
 	re, _ := regexp.Compile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`)
 	ok := re.MatchString(string(ip))
 	if !ok {
@@ -149,7 +122,7 @@ func validateIp(ip models.Ip) error {
 	return nil
 }
 
-func check(password models.Password, hashedPassword models.Password) bool {
+func check(password dto.Password, hashedPassword dto.Password) bool {
 	bytePwd := []byte(password)
 	byteHash := []byte(hashedPassword)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePwd)

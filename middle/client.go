@@ -6,7 +6,7 @@ package middle
 
 import (
 	"fmt"
-	"github.com/DAT4/backend-project/models"
+	"github.com/DAT4/backend-project/dto"
 	"log"
 	"strings"
 	"time"
@@ -16,7 +16,7 @@ import (
 
 type Client struct {
 	Id   byte
-	user *models.User
+	user *dto.User
 	game *Game
 	conn *websocket.Conn
 	send chan []byte
@@ -92,11 +92,11 @@ func (c *Client) readPump() {
 		}
 		switch message[ACT] {
 		case READY:
-			u, err := UserFromToken(string(message[ACT:]), c.game.Db)
+			u, err := UserFromToken(string(message[ACT:]), c.game.Users)
 			if err != nil {
 				return
 			}
-			c.user = &u
+			c.user = u.(*dto.User)
 			continue
 		case MOVE:
 			if c.game.onTheRoad(message) {
@@ -127,7 +127,7 @@ func (g *Game) onTheRoad(msg []byte) (ok bool) {
 		return false
 	}
 }
-func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) {
+func authenticateClient(c *websocket.Conn, g *Game) (u *dto.User, err error) {
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
@@ -138,12 +138,12 @@ func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) 
 			if err != nil {
 				return nil, err
 			}
-			u, err := UserFromToken(token, g.Db)
+			u, err := UserFromToken(token, g.Users)
 			if err != nil {
 				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
 				return nil, err
 			}
-			return &u, nil
+			return u.(*dto.User), nil
 		}
 	}
 }
