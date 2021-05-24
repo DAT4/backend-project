@@ -5,6 +5,14 @@ import "time"
 type TokenType int
 
 const (
+	ID = iota
+	X
+	Y
+	ACT
+	DIRECTION
+)
+
+const (
 	AUTHENTICATION TokenType = iota
 	REFRESH
 )

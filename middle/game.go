@@ -41,6 +41,12 @@ func NewGame(db dao.DBase) *Game {
 	}
 }
 
+func (g *Game) getInfo() {
+	for c := range g.clients {
+		fmt.Println(c.user.Username)
+	}
+}
+
 func (g *Game) Run() {
 	for {
 		select {

@@ -38,7 +38,7 @@ func NewClient(g *Game, conn *websocket.Conn) {
 	}
 	c.game.register <- c
 
-	err = c.sendStartCommand(g)
+	err = c.sendStartCommand()
 	if err != nil {
 		return
 	}
@@ -47,45 +47,31 @@ func NewClient(g *Game, conn *websocket.Conn) {
 	go c.readPump()
 }
 
-func (c *Client) sendStartCommand(g *Game) error {
-	msg := message{
-		command:  CREATE,
-		playerId: c.Id,
-		x:        1,
-		y:        1,
-	}
-	return c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
-}
+func (c *Client) writePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
 
-func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) {
 	for {
-		_, message, err := c.ReadMessage()
-		if err != nil {
-			return nil, err
-		}
-		if message[ACT] == READY {
-			token, err := getToken(string(message[ACT:]))
-			if err != nil {
-				return nil, err
+		select {
+		case message, ok := <-c.send:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
 			}
-			u, err := UserFromToken(token, g.Db)
-			if err != nil {
-				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
-				return nil, err
+			c.conn.WriteMessage(websocket.BinaryMessage, message)
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
 			}
-			return &u, nil
 		}
 	}
-}
 
-func getToken(token string) (string, error) {
-	tokenParts := strings.Split(token, " ")
-	if len(tokenParts) < 2 {
-		return tokenParts[0], nil
-	}
-	return tokenParts[1], nil
 }
-
 func (c *Client) readPump() {
 	defer func() {
 		c.game.unregister <- c
@@ -123,14 +109,15 @@ func (c *Client) readPump() {
 	}
 
 }
-
-const (
-	ID = iota
-	X
-	Y
-	ACT
-	DIRECTION
-)
+func (c *Client) sendStartCommand() error {
+	msg := message{
+		command:  CREATE,
+		playerId: c.Id,
+		x:        1,
+		y:        1,
+	}
+	return c.conn.WriteMessage(websocket.BinaryMessage, msg.send())
+}
 
 func (g *Game) onTheRoad(msg []byte) (ok bool) {
 	x, y := int(msg[X]), int(msg[Y])
@@ -140,29 +127,30 @@ func (g *Game) onTheRoad(msg []byte) (ok bool) {
 		return false
 	}
 }
-
-func (c *Client) writePump() {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
-
+func authenticateClient(c *websocket.Conn, g *Game) (u *models.User, err error) {
 	for {
-		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		if message[ACT] == READY {
+			token, err := getToken(string(message[ACT:]))
+			if err != nil {
+				return nil, err
 			}
-			c.conn.WriteMessage(websocket.BinaryMessage, message)
-		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
+			u, err := UserFromToken(token, g.Db)
+			if err != nil {
+				c.WriteMessage(websocket.BinaryMessage, []byte{0, 0, 0, 5, 1})
+				return nil, err
 			}
+			return &u, nil
 		}
 	}
-
+}
+func getToken(token string) (string, error) {
+	tokenParts := strings.Split(token, " ")
+	if len(tokenParts) < 2 {
+		return tokenParts[0], nil
+	}
+	return tokenParts[1], nil
 }
