@@ -36,6 +36,9 @@ func TestTokenHandler(t *testing.T) {
 	}
 
 	testDb := dao.NewTestDB()
+	server := API{
+		Db: testDb,
+	}
 	middle.AddUsersToTestDb(users, testDb)
 
 	//TODO look for dependency injection (timeout on jwt)
@@ -50,7 +53,7 @@ func TestTokenHandler(t *testing.T) {
 			request, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewReader(body))
 			response := httptest.NewRecorder()
 
-			tokenHandler(response, request, testDb)
+			server.TokenHandler(response, request)
 
 			if response.Code != testData.StatusCode {
 				t.Errorf("Expected %v got %v", testData.StatusCode, response.Code)
@@ -60,7 +63,7 @@ func TestTokenHandler(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	testDb := dao.NewTestDB()
+	server := API{Db: dao.NewTestDB()}
 	t.Run("Testing creating a user", func(t *testing.T) {
 
 		newUser := models.User{
@@ -73,7 +76,7 @@ func TestCreateUser(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewReader(body))
 		response := httptest.NewRecorder()
 
-		createUser(response, request, testDb)
+		server.CreateUser(response, request)
 
 		if response.Code != http.StatusCreated {
 			t.Errorf("Expected %v got %v", http.StatusCreated, response.Code)
@@ -83,7 +86,8 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	testDb := dao.NewTestDB()
+	db := dao.NewTestDB()
+	server := API{Db: db}
 
 	users := []models.User{
 		{
@@ -93,10 +97,10 @@ func TestRefreshToken(t *testing.T) {
 		},
 	}
 
-	middle.AddUsersToTestDb(users, testDb)
+	middle.AddUsersToTestDb(users, db)
 
 	t.Run("Testing creating a user", func(t *testing.T) {
-		ok, tokens := assertLogin(models.User{Username: "martin", Password: "T3stpass!"}, testDb)
+		ok, tokens := assertLogin(models.User{Username: "martin", Password: "T3stpass!"}, server)
 		if !ok {
 			t.Error("could not login")
 		}
@@ -104,7 +108,7 @@ func TestRefreshToken(t *testing.T) {
 		request.Header.Add("RefreshToken", tokens["refresh_token"])
 		response := httptest.NewRecorder()
 
-		refreshToken(response, request, testDb)
+		server.RefreshToken(response, request)
 
 		if response.Code != http.StatusOK {
 			t.Errorf("Expected %v got %v", http.StatusOK, response.Code)
@@ -112,12 +116,12 @@ func TestRefreshToken(t *testing.T) {
 	})
 }
 
-func assertLogin(user models.User, db dao.DBase) (ok bool, token map[string]string) {
+func assertLogin(user models.User, server API) (ok bool, token map[string]string) {
 	body, _ := json.Marshal(user)
 	request, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewReader(body))
 	response := httptest.NewRecorder()
 
-	tokenHandler(response, request, db)
+	server.TokenHandler(response, request)
 
 	if response.Code != http.StatusOK {
 		return false, nil
@@ -143,11 +147,16 @@ func TestJoinWebsocketConnection(t *testing.T) {
 
 	middle.AddUsersToTestDb(users, testDb)
 
-	go middle.G.Run(testDb)
+	server := API{
+		Db:   testDb,
+		Game: middle.NewGame(),
+	}
+
+	go server.Game.Run(server.Db)
 
 	t.Run("Testing the websocket", func(t *testing.T) {
 
-		s := httptest.NewServer(http.HandlerFunc(joinWebsocketConnection))
+		s := httptest.NewServer(http.HandlerFunc(server.JoinWebsocketConnection))
 		defer s.Close()
 
 		u := "ws" + strings.TrimPrefix(s.URL, "http")
@@ -158,7 +167,7 @@ func TestJoinWebsocketConnection(t *testing.T) {
 
 		defer ws.Close()
 
-		ok, token := assertLogin(users[0], testDb)
+		ok, token := assertLogin(users[0], server)
 
 		if !ok {
 			t.Error("login failed")

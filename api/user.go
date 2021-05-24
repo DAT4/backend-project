@@ -2,12 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/DAT4/backend-project/dao"
 	"github.com/DAT4/backend-project/middle"
 	"net/http"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request, base dao.DBase) {
+func (a *API) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	u, err := middle.UserFromJson(r.Body)
@@ -16,7 +15,7 @@ func createUser(w http.ResponseWriter, r *http.Request, base dao.DBase) {
 		return
 	}
 
-	u, err = middle.CreateUser(u, base)
+	u, err = middle.CreateUser(u, a.Db)
 	if err != nil {
 		handleHttpError(w, "ValidateUser", err, http.StatusNotAcceptable)
 		return

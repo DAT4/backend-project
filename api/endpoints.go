@@ -15,28 +15,7 @@ func byLazy(fn func(w http.ResponseWriter, r *http.Request, base dao.DBase), db 
 }
 
 func AddEndpoints(r *mux.Router, db dao.DBase) {
-	endpoints := []models.Endpoint{
-		{
-			Path:    "/login",
-			Handler: byLazy(tokenHandler, db),
-			Method:  "POST",
-		},
-		{
-			Path:    "/register",
-			Handler: byLazy(createUser, db),
-			Method:  "POST",
-		},
-		{
-			Path:    "/refresh",
-			Handler: byLazy(refreshToken, db),
-			Method:  "GET",
-		},
-		{
-			Path:    "/join",
-			Handler: joinWebsocketConnection,
-			Method:  "GET",
-		},
-	}
+	endpoints := []models.Endpoint{}
 	add(endpoints, r)
 }
 

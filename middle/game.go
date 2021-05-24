@@ -5,12 +5,6 @@ import (
 	"github.com/DAT4/backend-project/dao"
 )
 
-var G *Game
-
-func init() {
-	G = NewGame()
-}
-
 type Game struct {
 	state      GameState
 	Db         dao.DBase

@@ -22,8 +22,8 @@ type query struct {
 	collection string
 }
 
-func NewMongoDB(uri string) (db MongoDB, err error) {
-	db = MongoDB{uri}
+func NewMongoDB(uri string) (db *MongoDB, err error) {
+	db = &MongoDB{uri}
 	err = db.startUserCounter()
 	return
 }

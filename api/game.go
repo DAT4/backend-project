@@ -11,8 +11,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func joinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
-	serveWs(middle.G, w, r)
+func (a *API) JoinWebsocketConnection(w http.ResponseWriter, r *http.Request) {
+	serveWs(a.Game, w, r)
 }
 
 func serveWs(g *middle.Game, w http.ResponseWriter, r *http.Request) {
