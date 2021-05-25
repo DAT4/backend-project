@@ -28,6 +28,14 @@ func NewClient(g *Game, conn *websocket.Conn) {
 		fmt.Println(err)
 		return
 	}
+	for k := range g.clients {
+		_ = conn.WriteMessage(websocket.BinaryMessage, message{
+			command:  ASSIGN,
+			playerId: byte(k.user.PlayerID),
+			x:        0,
+			y:        0,
+		}.send())
+	}
 
 	c := &Client{
 		Id:   byte(user.PlayerID),
